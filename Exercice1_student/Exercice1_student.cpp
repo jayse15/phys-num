@@ -89,7 +89,7 @@ double dist_s_l;     // Distance satellite-Lune
       if(alpha >= 0. && alpha <= 1.0){
         t += dt;                 //mise à jour du temps
         while(error>tol && iteration<=maxit){
-        	y = yold; // MODIFIER et COMPLETER
+          y = yold; // MODIFIER et COMPLETER
         	iteration += 1;
 	}
         if(iteration>=maxit){
