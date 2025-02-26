@@ -74,11 +74,11 @@ double dist_s_l;     // Distance satellite-Lune
 
     void compute_f(valarray<double>& f)
     {
-      double grav_term_l = -G_grav*(ml/pow(pow(f[2] - xl, 2) + pow(f[3], 2), 1.5));
-      double grav_term_t = -G_grav*(mt/pow(pow(f[2] - xt, 2) + pow(f[3], 2), 1.5));
+      double grav_term_l = -G_grav*ml/pow(pow(f[2] - xl, 2) + pow(f[3], 2), 1.5);
+      double grav_term_t = -G_grav*mt/pow(pow(f[2] - xt, 2) + pow(f[3], 2), 1.5);
 
       f[0]      = (f[2]-xt)*grav_term_t + (f[2]-xl)*grav_term_l + 2*Om*f[1] + pow(Om, 2)*f[2];
-      f[1]      = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] + pow(Om, 2)*f[3] + pow(Om, 2)*f[3];
+      f[1]      = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] - 2*Om*f[0] + pow(Om, 2)*f[3];
       f[2]      = f[0];
       f[3]      = f[1];
     }
@@ -89,25 +89,25 @@ double dist_s_l;     // Distance satellite-Lune
       unsigned int iteration=0;
       double error=999e0;
       valarray<double> f =valarray<double>(0.e0,4);
-      valarray<double> yold=valarray<double>(y);
-      valarray<double> y_control=valarray<double>(y);
-      valarray<double> delta_y_EE=valarray<double>(y);
+      valarray<double> yk=valarray<double>(y);
+      valarray<double> yn=valarray<double>(y);
+      valarray<double> fyn=valarray<double>(y);
 
       //TODO : écrire un algorithme valide pour chaque alpha dans [0,1]
       // tel que alpha=1 correspond à Euler explicite et alpha=0 à Euler implicite
       // et alpha=0.5 à Euler semi-implicite
       if(alpha >= 0. && alpha <= 1.0){
         t += dt;                 //mise à jour du temps
-        compute_f(delta_y_EE);
-        delta_y_EE*=alpha*dt;
+        compute_f(fyn);
+        fyn*=alpha*dt;
         while(error>tol && iteration<=maxit){
-          yold = y;
-          compute_f(yold);
-          yold *=(1-alpha)*dt;
-          y = y_control +delta_y_EE + yold;
+          yk = y;
+          compute_f(yk);
+          yk *=(1-alpha)*dt;
+          y = yn + fyn + yk;
           f = y;
           compute_f(f);
-          error = norm(y - y_control - delta_y_EE - (1-alpha)*f*dt);
+          error = norm(y - yn - fyn - (1-alpha)*f*dt);
           iteration += 1;
 	}
         if(iteration>=maxit){
@@ -161,7 +161,7 @@ public:
     {
       xt = dist*ml/(mt+ml);
       xl = dist*mt/(mt+ml);
-      Om = (G_grav*mt/(pow(dist, 2) * xl));
+      Om = sqrt(G_grav*mt/(pow(dist, 2) * xl));
       y0[2] = (sqrt(ml)*xt + sqrt(mt)*xl)/(sqrt(mt) + sqrt(ml));
 
 
