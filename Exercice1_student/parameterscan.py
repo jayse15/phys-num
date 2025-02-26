@@ -6,11 +6,11 @@ import os
 
 # Parameters
 # TODO adapt to what you need (folder path executable input filename)
-executable = 'exe.exe'  # Name of the executable (NB: .exe extension is required on Windows)
-repertoire = r"C:/Users/Administrator/physnum/2025/EX1/SOLUTION/"
+executable = 'a.out'  # Name of the executable (NB: .exe extension is required on Windows)
+repertoire = r"./"
 os.chdir(repertoire)
 
-input_filename = 'configuration.in.example'  # Name of the input file
+input_filename = 'configuration.in'  # Name of the input file
 
 
 nsteps = np.array([4000, 6000, 10000, 14e3, 20e3]) # TODO change
@@ -21,10 +21,8 @@ with open(input_filename, 'r') as file:
     lines = file.readlines()
     for line in lines:
         if 'tfin' in line:
-            # Assuming the line is like "tfin = 259200"
             try:
-                line_content = line.split('!')[0]
-                file_tfin = int(line_content.split('=')[1].strip())
+                file_tfin = int(line.split('=')[1].strip())
                 if file_tfin != tfin:
                     print(f"Warning: tfin in the file ({file_tfin}) does not match the expected value ({tfin}).")
             except ValueError:
@@ -44,7 +42,6 @@ for i in range(nsimul):
     output_file = f"{paramstr}={param[i]}.out"
     outputs.append(output_file)
     cmd = f"{repertoire}{executable} {input_filename} {paramstr}={param[i]:.15g} output={output_file}"
-    cmd = f"{executable} {input_filename} {paramstr}={param[i]:.15g} output={output_file}"
     print(cmd)
     subprocess.run(cmd, shell=True)
     print('Done.')
@@ -68,7 +65,7 @@ lw = 1.5
 fs = 16
 
 fig, ax = plt.subplots(constrained_layout=True)
-ax.plot(data[:, 1], data[:, 2])
+ax.plot(data[:, 3], data[:, 4])
 ax.set_xlabel('x [m]', fontsize=fs)
 ax.set_ylabel('y [m]', fontsize=fs)
 
