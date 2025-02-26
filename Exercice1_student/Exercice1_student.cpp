@@ -50,7 +50,9 @@ double dist_s_l;     // Distance satellite-Lune
   */
   void printOut(bool write)
   {
-    double Energy = 0.5*(pow(y[0], 2) + pow(y[1], 2)) - G_grav*(mt/sqrt(pow(y[2]-xt, 2) + pow(y[3], 2)) + ml/sqrt(pow(y[2]-xl, 2) + pow(y[3], 2)));
+    double Energy = 0.5*(pow(y[0], 2) + pow(y[1], 2)) -
+                    G_grav*(mt/sqrt(pow(y[2]-xt, 2) + pow(y[3], 2)) +
+                    ml/sqrt(pow(y[2]-xl, 2) + pow(y[3], 2))) + pow(Om, 2)/2 *(pow(y[2], 2) + pow(y[3], 2));
 
     // Ecriture tous les [sampling] pas de temps, sauf si write est vrai
     if((!write && last>=sampling) || (write && last!=1))
@@ -65,12 +67,15 @@ double dist_s_l;     // Distance satellite-Lune
     }
   }
 
-    void compute_f(valarray<double>& f) //  TODO: Calcule le tableau de fonctions f(y)
+    void compute_f(valarray<double>& f)
     {
-      f[0]      = 0;
-      f[1]      = 0;
-      f[2]      = 0;
-      f[3]      = 0;
+      double grav_term_l = -G_grav*(ml/pow(pow(y[2] - xl, 2) + pow(y[3], 2), 1.5));
+      double grav_term_t = -G_grav*(mt/pow(pow(y[2] - xt, 2) + pow(y[3], 2), 1.5));
+
+      f[0]      = (y[2]-xt)*grav_term_t + (y[2]-xl)*grav_term_l + 2*Om*y[1] + pow(Om, 2)*y[2];
+      f[1]      = y[3]*(grav_term_t + grav_term_l) - 2*Om*y[0] + pow(Om, 2)*y[3];
+      f[2]      = y[0];
+      f[3]      = y[1];
     }
 
     // New step method from EngineEuler
@@ -123,8 +128,7 @@ public:
       tol      = configFile.get<double>("tol", tol);
       maxit    = configFile.get<unsigned int>("maxit", maxit);
       alpha    = configFile.get<double>("alpha", alpha);
-      // TODO: calculer le time step
-      dt       = 0;
+      dt       = tfin/nsteps;
 
 
       // Ouverture du fichier de sortie
