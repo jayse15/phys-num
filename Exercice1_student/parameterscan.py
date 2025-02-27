@@ -81,7 +81,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     ax2.plot(data[:, 0], data[:, 5])
     ax2.set_xlabel(r't [s]', fontsize=fs)
     ax2.set_ylabel(r'$E_{mec}$ [J]', fontsize=fs)
-    ax.set_title(rf'Energy for $N_{{steps}}={nsteps[i]}$')
+    ax2.set_title(rf'Energy for $N_{{steps}}={nsteps[i]}$')
     plt.show()
 
 
