@@ -8,7 +8,6 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern, the default LaTeX font
-    'font.size': 16,                   # Set base font size
     'axes.labelsize': 16,              # Font size for axis labels
     'axes.titlesize': 18,              # Font size for titles
     'legend.fontsize': 14,             # Font size for legends
@@ -25,23 +24,10 @@ os.chdir(repertoire)
 input_filename = 'configuration.in'  # Name of the input file
 
 
-nsteps = np.array([4000, 6000, 10000, 14e3, 20e3])
+nsteps = np.array([4000, 40e3])#, 6000, 10000, 14e3, 20e3])
 nsimul = len(nsteps)  # Number of simulations to perform
 
-tfin = 259200  # Verifies that the value of tfin is EXACTLY the same as in the input file
-with open(input_filename, 'r') as file:
-    lines = file.readlines()
-    for line in lines:
-        if 'tfin' in line:
-            try:
-                file_tfin = int(line.split('=')[1].strip())
-                if file_tfin != tfin:
-                    print(f"Warning: tfin in the file ({file_tfin}) does not match the expected value ({tfin}).")
-            except ValueError:
-                print("Error: Unable to parse tfin from the input file.")
-            break
-    print("Error: tfin not found in input file.")
-
+tfin = 259200
 dt = tfin / nsteps
 
 
@@ -71,8 +57,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     yy = data[-1, 4]
     En = data[-1, 5]
     convergence_list.append(xx)
-    # TODO compute the error for each simulation
-    error[i] = np.abs(En - data[0, 5])
+    error[i] = np.abs(En - data[0, 5]) # We use energy since it is the only known quantity at the end
 
     lw = 1.5
     fs = 16
@@ -83,6 +68,12 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     ax.set_ylabel('y [m]', fontsize=fs)
     plt.show()
 
+    fig2, ax2 = plt.subplots(constrained_layout=True)
+    ax2.plot(data[:, 0], data[:, 5])
+    ax2.set_xlabel(r't [s]', fontsize=fs)
+    ax2.set_ylabel(r'$E_{mec}$ [J]', fontsize=fs)
+    plt.show()
+
 
 
 # uncomment the following to debug
@@ -91,7 +82,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
 plt.figure()
 plt.loglog(dt, error, 'r+-', linewidth=lw)
 plt.xlabel(r'$\Delta$ t [s]', fontsize=fs)
-plt.ylabel('final position error [m]', fontsize=fs)
+plt.ylabel('final energy error [J]', fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 plt.grid(True)
@@ -101,7 +92,7 @@ Si on n'a pas la solution analytique: on représente la quantite voulue
 (ci-dessous v_y, modifier selon vos besoins)
 en fonction de (Delta t)^norder, ou norder est un entier.
 """
-norder = 1  # Modify if needed
+norder = 2  # Modify if needed
 
 plt.figure()
 plt.plot(dt**norder, convergence_list, 'k+-', linewidth=lw)

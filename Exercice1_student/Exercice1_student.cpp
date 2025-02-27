@@ -32,8 +32,6 @@ double Om;           // Vitesse de rotation du repère
 double G_grav;       // Constante gravitationnelle
 double xt;           // Position de la Terre
 double xl;           // Position de la Lune
-double dist_s_t;     // Distance satellite-Terre
-double dist_s_l;     // Distance satellite-Lune
 
   valarray<double> y0 = std::valarray<double>(0.e0, 4); // Correctly initialized
   valarray<double> y  = std::valarray<double>(0.e0, 4); // Correctly initialized
@@ -91,26 +89,20 @@ double dist_s_l;     // Distance satellite-Lune
       valarray<double> yn=valarray<double>(y);
       valarray<double> fyn=valarray<double>(y);
 
-      //TODO : écrire un algorithme valide pour chaque alpha dans [0,1]
-      // tel que alpha=1 correspond à Euler explicite et alpha=0 à Euler implicite
+      // alpha=1 correspond à Euler explicite, alpha=0 à Euler implicite
       // et alpha=0.5 à Euler semi-implicite
       if(alpha >= 0. && alpha <= 1.0){
         t += dt;                 //mise à jour du temps
         compute_f(fyn);
         fyn*=alpha*dt;
-        cout << fyn[0] << fyn[1] << endl;
         while(error>tol && iteration<=maxit){
           yk = y;
-          cout << yk[2] << yk[3] << endl;
           compute_f(yk);
           yk *=(1-alpha)*dt;
-          cout << yk[2] << yk[3]<< endl;
           y = yn + fyn + yk;
-          cout << y[2] << y[3] << endl;
           f = y;
           compute_f(f);
           error = abs(y - yn - fyn - (1-alpha)*f*dt).max();
-          cout << error << endl; 
           iteration += 1;
 	}
         if(iteration>=maxit){
@@ -121,7 +113,6 @@ double dist_s_l;     // Distance satellite-Lune
       {
         cerr << "alpha not valid" << endl;
       }
-      cout << iteration << endl;
 
     }
 
