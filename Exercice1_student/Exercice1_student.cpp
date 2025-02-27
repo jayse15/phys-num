@@ -153,7 +153,7 @@ public:
       // Simulation complete
     void run()
     {
-      xt = dist*ml/(mt+ml);
+      xt = -dist*ml/(mt+ml);
       xl = dist*mt/(mt+ml);
       Om = sqrt(G_grav*mt/(pow(dist, 2) * xl));
       y0[2] = (sqrt(ml)*xt + sqrt(mt)*xl)/(sqrt(mt) + sqrt(ml));

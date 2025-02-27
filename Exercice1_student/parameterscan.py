@@ -24,11 +24,16 @@ os.chdir(repertoire)
 input_filename = 'configuration.in'  # Name of the input file
 
 
-nsteps = np.array([4000])#, 6000, 10000, 14e3, 20e3])
+nsteps = np.array([4000, 6000, 10000, 14e3, 20e3, 40e3])
 nsimul = len(nsteps)  # Number of simulations to perform
 
 tfin = 259200
 dt = tfin / nsteps
+mt     = 5.972e24
+ml     = 7.348e22
+dist   = 385000000
+xt = -dist*ml/(mt+ml)
+xl = dist*mt/(mt+ml)
 
 
 paramstr = 'nsteps'  # Parameter name to scan
@@ -66,12 +71,17 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     ax.plot(data[:, 3], data[:, 4])
     ax.set_xlabel('x [m]', fontsize=fs)
     ax.set_ylabel('y [m]', fontsize=fs)
+    #ax.plot(xt, 0, 'go', label='Earth')
+    ax.plot(xl, 0, 'ro', label='moon')
+    ax.set_title(rf'Trajectory for $N_{{steps}}$={param[i]}')
+    ax.legend()
     plt.show()
 
     fig2, ax2 = plt.subplots(constrained_layout=True)
     ax2.plot(data[:, 0], data[:, 5])
     ax2.set_xlabel(r't [s]', fontsize=fs)
     ax2.set_ylabel(r'$E_{mec}$ [J]', fontsize=fs)
+    ax.set_title(rf'Energy for $N_{{steps}}={nsteps[i]}$')
     plt.show()
 
 
