@@ -68,11 +68,7 @@ double dist_s_l;     // Distance satellite-Lune
     }
   }
 
-    double norm(const valarray<double>& v) {
-      return sqrt((v * v).sum());
-    } // Function giving the norm of a valarray vector 
-
-    void compute_f(valarray<double>& f)
+  void compute_f(valarray<double>& f)
     {
       double grav_term_l = -G_grav*ml/pow(pow(f[2] - xl, 2) + pow(f[3], 2), 1.5);
       double grav_term_t = -G_grav*mt/pow(pow(f[2] - xt, 2) + pow(f[3], 2), 1.5);
@@ -107,7 +103,8 @@ double dist_s_l;     // Distance satellite-Lune
           y = yn + fyn + yk;
           f = y;
           compute_f(f);
-          error = norm(y - yn - fyn - (1-alpha)*f*dt);
+          error = abs(y - yn - fyn - (1-alpha)*f*dt).max();
+          cout << error << endl; 
           iteration += 1;
 	}
         if(iteration>=maxit){
