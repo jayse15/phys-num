@@ -70,7 +70,7 @@ double dist_s_l;     // Distance satellite-Lune
 
     double norm(const valarray<double>& v) {
       return sqrt((v * v).sum());
-    }
+    } // Function giving the norm of a valarray vector 
 
     void compute_f(valarray<double>& f)
     {
