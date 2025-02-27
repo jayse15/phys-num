@@ -24,7 +24,7 @@ os.chdir(repertoire)
 input_filename = 'configuration.in'  # Name of the input file
 
 
-nsteps = np.array([4000, 40e3])#, 6000, 10000, 14e3, 20e3])
+nsteps = np.array([4000])#, 6000, 10000, 14e3, 20e3])
 nsimul = len(nsteps)  # Number of simulations to perform
 
 tfin = 259200

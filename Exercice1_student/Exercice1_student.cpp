@@ -71,7 +71,7 @@ double xl;           // Position de la Lune
       double grav_term_l = -G_grav*ml/pow(pow(f[2] - xl, 2) + pow(f[3], 2), 1.5);
       double grav_term_t = -G_grav*mt/pow(pow(f[2] - xt, 2) + pow(f[3], 2), 1.5);
       double ax = (f[2]-xt)*grav_term_t + (f[2]-xl)*grav_term_l + 2*Om*f[1] + pow(Om, 2)*f[2];
-      double ay = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] - 2*Om*f[0] + pow(Om, 2)*f[3];
+      double ay = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] + pow(Om, 2)*f[3];
 
       f[2]      = f[0];
       f[3]      = f[1];
