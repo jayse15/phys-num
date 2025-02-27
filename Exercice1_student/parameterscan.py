@@ -4,8 +4,20 @@ import matplotlib.pyplot as plt
 import pdb
 import os
 
+plt.rcParams.update({
+    'text.usetex': True,               # Use LaTeX for all text rendering
+    'font.family': 'serif',            # Set font family to serif
+    'font.serif': ['Computer Modern'], # Use Computer Modern, the default LaTeX font
+    'font.size': 16,                   # Set base font size
+    'axes.labelsize': 16,              # Font size for axis labels
+    'axes.titlesize': 18,              # Font size for titles
+    'legend.fontsize': 14,             # Font size for legends
+    'xtick.labelsize': 14,             # Font size for x-tick labels
+    'ytick.labelsize': 14,             # Font size for y-tick labels
+    'figure.dpi': 150,                 # DPI for displaying figures
+})
+
 # Parameters
-# TODO adapt to what you need (folder path executable input filename)
 executable = 'a.out'  # Name of the executable (NB: .exe extension is required on Windows)
 repertoire = r"./"
 os.chdir(repertoire)
@@ -13,10 +25,10 @@ os.chdir(repertoire)
 input_filename = 'configuration.in'  # Name of the input file
 
 
-nsteps = np.array([4000, 6000, 10000, 14e3, 20e3]) # TODO change
+nsteps = np.array([4000, 6000, 10000, 14e3, 20e3])
 nsimul = len(nsteps)  # Number of simulations to perform
 
-tfin = 259200  # TODO: Verify that the value of tfin is EXACTLY the same as in the input file
+tfin = 259200  # Verifies that the value of tfin is EXACTLY the same as in the input file
 with open(input_filename, 'r') as file:
     lines = file.readlines()
     for line in lines:
@@ -28,6 +40,7 @@ with open(input_filename, 'r') as file:
             except ValueError:
                 print("Error: Unable to parse tfin from the input file.")
             break
+    print("Error: tfin not found in input file.")
 
 dt = tfin / nsteps
 
@@ -59,24 +72,25 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     En = data[-1, 5]
     convergence_list.append(xx)
     # TODO compute the error for each simulation
-    error[i] =  np.abs(En - data[0, 5])
+    error[i] = np.abs(En - data[0, 5])
 
-lw = 1.5
-fs = 16
+    lw = 1.5
+    fs = 16
 
-fig, ax = plt.subplots(constrained_layout=True)
-ax.plot(data[:, 3], data[:, 4])
-ax.set_xlabel('x [m]', fontsize=fs)
-ax.set_ylabel('y [m]', fontsize=fs)
+    fig, ax = plt.subplots(constrained_layout=True)
+    ax.plot(data[:, 3], data[:, 4])
+    ax.set_xlabel('x [m]', fontsize=fs)
+    ax.set_ylabel('y [m]', fontsize=fs)
+    plt.show()
 
 
 
-# uncomment the following if you want debug
+# uncomment the following to debug
 #import pdb
 #pbd.set_trace()
 plt.figure()
 plt.loglog(dt, error, 'r+-', linewidth=lw)
-plt.xlabel(r'\Delta t [s]', fontsize=fs)
+plt.xlabel(r'$\Delta$ t [s]', fontsize=fs)
 plt.ylabel('final position error [m]', fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
@@ -91,7 +105,7 @@ norder = 1  # Modify if needed
 
 plt.figure()
 plt.plot(dt**norder, convergence_list, 'k+-', linewidth=lw)
-plt.xlabel(r'\Delta t [s]', fontsize=fs)
+plt.xlabel(fr'$\Delta$ $t^{norder}$ [s]', fontsize=fs)
 plt.ylabel('v_y [m/s]', fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
