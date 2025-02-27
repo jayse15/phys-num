@@ -76,11 +76,13 @@ double dist_s_l;     // Distance satellite-Lune
     {
       double grav_term_l = -G_grav*ml/pow(pow(f[2] - xl, 2) + pow(f[3], 2), 1.5);
       double grav_term_t = -G_grav*mt/pow(pow(f[2] - xt, 2) + pow(f[3], 2), 1.5);
+      double ax = (f[2]-xt)*grav_term_t + (f[2]-xl)*grav_term_l + 2*Om*f[1] + pow(Om, 2)*f[2];
+      double ay = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] - 2*Om*f[0] + pow(Om, 2)*f[3];
 
-      f[0]      = (f[2]-xt)*grav_term_t + (f[2]-xl)*grav_term_l + 2*Om*f[1] + pow(Om, 2)*f[2];
-      f[1]      = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] - 2*Om*f[0] + pow(Om, 2)*f[3];
       f[2]      = f[0];
       f[3]      = f[1];
+      f[0]      = ax;
+      f[1]      = ay;
     }
 
     // New step method from EngineEuler
@@ -100,11 +102,15 @@ double dist_s_l;     // Distance satellite-Lune
         t += dt;                 //mise à jour du temps
         compute_f(fyn);
         fyn*=alpha*dt;
+        cout << fyn[0] << fyn[1] << endl;
         while(error>tol && iteration<=maxit){
           yk = y;
+          cout << yk[2] << yk[3] << endl;
           compute_f(yk);
           yk *=(1-alpha)*dt;
+          cout << yk[2] << yk[3]<< endl;
           y = yn + fyn + yk;
+          cout << y[2] << y[3] << endl;
           f = y;
           compute_f(f);
           error = norm(y - yn - fyn - (1-alpha)*f*dt);
