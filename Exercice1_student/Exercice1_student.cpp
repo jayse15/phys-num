@@ -32,6 +32,8 @@ double Om;           // Vitesse de rotation du repère
 double G_grav;       // Constante gravitationnelle
 double xt;           // Position de la Terre
 double xl;           // Position de la Lune
+double dist_lune;    // Distance lune-satellite
+double dist_terre;   // Distance terre-satellite
 
   valarray<double> y0 = std::valarray<double>(0.e0, 4); // Correctly initialized
   valarray<double> y  = std::valarray<double>(0.e0, 4); // Correctly initialized
@@ -68,8 +70,10 @@ double xl;           // Position de la Lune
 
   void compute_f(valarray<double>& f)
     {
-      double grav_term_l = -G_grav*ml/pow(pow(f[2] - xl, 2) + pow(f[3], 2), 1.5);
-      double grav_term_t = -G_grav*mt/pow(pow(f[2] - xt, 2) + pow(f[3], 2), 1.5);
+      dist_terre = sqrt(pow(f[2]-xt, 2) + pow(f[3], 2));
+      dist_lune = sqrt(pow(f[2]-xl, 2) + pow(f[3], 2));
+      double grav_term_l = -G_grav*ml/pow(dist_lune, 3);
+      double grav_term_t = -G_grav*mt/pow(dist_terre, 3);
       double ax = (f[2]-xt)*grav_term_t + (f[2]-xl)*grav_term_l + 2*Om*f[1] + pow(Om, 2)*f[2];
       double ay = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] + pow(Om, 2)*f[3];
 
@@ -157,6 +161,7 @@ public:
       xl = dist*mt/(mt+ml);
       Om = sqrt(G_grav*mt/(pow(dist, 2) * xl));
       y0[2] = (sqrt(ml)*xt + sqrt(mt)*xl)/(sqrt(mt) + sqrt(ml));
+
 
 
       t = 0.e0; // initialiser le temps
