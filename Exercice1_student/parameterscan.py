@@ -1,6 +1,7 @@
 import numpy as np
 import subprocess
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import pdb
 import os
 
@@ -34,6 +35,7 @@ ml     = 7.348e22
 dist   = 385000000
 xt = -dist*ml/(mt+ml)
 xl = dist*mt/(mt+ml)
+rl     = 1737100
 
 
 paramstr = 'nsteps'  # Parameter name to scan
@@ -72,7 +74,9 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     ax.set_xlabel('x [m]', fontsize=fs)
     ax.set_ylabel('y [m]', fontsize=fs)
     #ax.plot(xt, 0, 'go', label='Earth')
-    ax.plot(xl, 0, 'ro', label='moon')
+    moon = patches.Circle((xl, 0), rl, fill=True, color='gray', lw=2, label='Moon')
+    ax.add_patch(moon)
+    ax.set_aspect('equal', adjustable='box')
     ax.set_title(rf'Trajectory for $N_{{steps}}$={param[i]}')
     ax.legend()
     plt.show()
@@ -89,13 +93,6 @@ for i in range(nsimul):  # Iterate through the results of all simulations
 # uncomment the following to debug
 #import pdb
 #pbd.set_trace()
-plt.figure()
-plt.loglog(dt, error, 'r+-', linewidth=lw)
-plt.xlabel(r'$\Delta$ t [s]', fontsize=fs)
-plt.ylabel('final energy error [J]', fontsize=fs)
-plt.xticks(fontsize=fs)
-plt.yticks(fontsize=fs)
-plt.grid(True)
 
 """
 Si on n'a pas la solution analytique: on représente la quantite voulue
@@ -103,7 +100,19 @@ Si on n'a pas la solution analytique: on représente la quantite voulue
 en fonction de (Delta t)^norder, ou norder est un entier.
 """
 norder = 2  # Modify if needed
+C = 30  # Modify for different alphas
 
+plt.figure()
+plt.loglog(nsteps, error, 'r+-', linewidth=lw)
+plt.loglog(nsteps, C*nsteps**-norder, linewidth=lw, ls='--', c='green', label=rf'~$1/N_{{steps}}^{norder}$')
+plt.xlabel(r'$N_{steps}$', fontsize=fs)
+plt.ylabel('final energy error [J]', fontsize=fs)
+plt.xticks(fontsize=fs)
+plt.yticks(fontsize=fs)
+plt.legend()
+plt.grid(True)
+
+plt.show()
 plt.figure()
 plt.plot(dt**norder, convergence_list, 'k+-', linewidth=lw)
 plt.xlabel(fr'$\Delta$ $t^{norder}$ [s]', fontsize=fs)
