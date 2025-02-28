@@ -70,7 +70,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     lw = 1.5
     fs = 16
 
-    fig, ax = plt.subplots(constrained_layout=False, figsize=(20,8))
+    fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(data[:, 3], data[:, 4])
     ax.set_xlabel('x [m]', fontsize=fs)
     ax.set_ylabel('y [m]', fontsize=fs)
@@ -99,7 +99,6 @@ On représente l'erreur sur l'energie en fonction de N_steps et
 v_y en fonction de (Delta t)^norder, ou norder est un entier.
 """
 norder = 1  # Modify if needed
-C = 30  # Modify for different alphas
 
 plt.figure()
 plt.loglog(nsteps, error, 'r+-', linewidth=lw)
