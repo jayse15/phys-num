@@ -25,10 +25,10 @@ os.chdir(repertoire)
 input_filename = 'configuration.in'  # Name of the input file
 
 
-nsteps = np.array([4000, 6000, 10000, 14e3, 20e3, 40e3])
+nsteps = np.array([4000, 40e3])
 nsimul = len(nsteps)  # Number of simulations to perform
 
-tfin = 259200
+tfin = 259200 # Check tfin is the same in configuration.in !!
 dt = tfin / nsteps
 mt     = 5.972e24
 ml     = 7.348e22
@@ -36,6 +36,7 @@ dist   = 385000000
 xt = -dist*ml/(mt+ml)
 xl = dist*mt/(mt+ml)
 rl     = 1737100
+rt     = 6378100
 
 
 paramstr = 'nsteps'  # Parameter name to scan
@@ -63,21 +64,21 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     xx = data[-1, 3]
     yy = data[-1, 4]
     En = data[-1, 5]
-    convergence_list.append(xx)
+    convergence_list.append(vy)
     error[i] = np.abs(En - data[0, 5]) # We use energy since it is the only known quantity at the end
 
     lw = 1.5
     fs = 16
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots(constrained_layout=False, figsize=(20,8))
     ax.plot(data[:, 3], data[:, 4])
     ax.set_xlabel('x [m]', fontsize=fs)
     ax.set_ylabel('y [m]', fontsize=fs)
-    #ax.plot(xt, 0, 'go', label='Earth')
-    moon = patches.Circle((xl, 0), rl, fill=True, color='gray', lw=2, label='Moon')
+    moon = patches.Circle((xl, 0), rl, fill=True, color='gray', lw=2, label='Lune')
+    #earth = patches.Circle((xt, 0), rt, fill=True, color='blue', lw=2, label='Earth')
     ax.add_patch(moon)
+    #ax.add_patch(earth)
     ax.set_aspect('equal', adjustable='box')
-    ax.set_title(rf'Trajectory for $N_{{steps}}$={param[i]}')
     ax.legend()
     plt.show()
 
@@ -85,7 +86,6 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     ax2.plot(data[:, 0], data[:, 5])
     ax2.set_xlabel(r't [s]', fontsize=fs)
     ax2.set_ylabel(r'$E_{mec}$ [J]', fontsize=fs)
-    ax2.set_title(rf'Energy for $N_{{steps}}={nsteps[i]}$')
     plt.show()
 
 
@@ -95,18 +95,17 @@ for i in range(nsimul):  # Iterate through the results of all simulations
 #pbd.set_trace()
 
 """
-Si on n'a pas la solution analytique: on représente la quantite voulue
-(ci-dessous v_y, modifier selon vos besoins)
-en fonction de (Delta t)^norder, ou norder est un entier.
+On représente l'erreur sur l'energie en fonction de N_steps et
+v_y en fonction de (Delta t)^norder, ou norder est un entier.
 """
-norder = 2  # Modify if needed
+norder = 1  # Modify if needed
 C = 30  # Modify for different alphas
 
 plt.figure()
 plt.loglog(nsteps, error, 'r+-', linewidth=lw)
-plt.loglog(nsteps, C*nsteps**-norder, linewidth=lw, ls='--', c='green', label=rf'~$1/N_{{steps}}^{norder}$')
+plt.loglog(nsteps, nsteps**-norder, linewidth=lw, ls='--', c='green', label=rf'~$1/N_{{steps}}^{norder}$')
 plt.xlabel(r'$N_{steps}$', fontsize=fs)
-plt.ylabel('final energy error [J]', fontsize=fs)
+plt.ylabel(r'$|E_{mec}(t=0)-E_{mec}(t_f)|$ [J]', fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 plt.legend()
@@ -116,7 +115,7 @@ plt.show()
 plt.figure()
 plt.plot(dt**norder, convergence_list, 'k+-', linewidth=lw)
 plt.xlabel(fr'$\Delta$ $t^{norder}$ [s]', fontsize=fs)
-plt.ylabel('v_y [m/s]', fontsize=fs)
+plt.ylabel(r'$v_y$ [m/s]', fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 plt.grid(True)
