@@ -44,7 +44,7 @@ param = nsteps  # Parameter values to scan
 
 # Simulations
 outputs = []  # List to store output file names
-convergence_list = []
+convergence_list_x, convergence_list_y = [], []
 for i in range(nsimul):
     output_file = f"{paramstr}={param[i]}.out"
     outputs.append(output_file)
@@ -64,7 +64,8 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     xx = data[-1, 3]
     yy = data[-1, 4]
     En = data[-1, 5]
-    convergence_list.append(vy)
+    convergence_list_x.append(xx)
+    convergence_list_y.append(yy)
     error[i] = np.abs(En - data[0, 5]) # We use energy since it is the only known quantity at the end
 
     lw = 1.5
@@ -72,8 +73,8 @@ for i in range(nsimul):  # Iterate through the results of all simulations
 
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(data[:, 3], data[:, 4])
-    ax.set_xlabel('x [m]', fontsize=fs)
-    ax.set_ylabel('y [m]', fontsize=fs)
+    ax.set_xlabel(r"$x'$ [m]", fontsize=fs)
+    ax.set_ylabel(r"$y'$ [m]", fontsize=fs)
     moon = patches.Circle((xl, 0), rl, fill=True, color='gray', lw=2, label='Lune')
     #earth = patches.Circle((xt, 0), rt, fill=True, color='blue', lw=2, label='Earth')
     ax.add_patch(moon)
@@ -112,9 +113,9 @@ plt.grid(True)
 
 plt.show()
 plt.figure()
-plt.plot(dt**norder, convergence_list, 'k+-', linewidth=lw)
+plt.plot(dt**norder, convergence_list_x, 'k+-', linewidth=lw)
 plt.xlabel(fr'$\Delta$ $t^{norder}$ [s]', fontsize=fs)
-plt.ylabel(r'$v_y$ [m/s]', fontsize=fs)
+plt.ylabel(r"$x'(t_f)$ [m/s]", fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 plt.grid(True)
