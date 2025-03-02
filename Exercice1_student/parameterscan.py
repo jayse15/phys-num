@@ -9,9 +9,6 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern, the default LaTeX font
-    'axes.labelsize': 16,              # Font size for axis labels
-    'axes.titlesize': 18,              # Font size for titles
-    'legend.fontsize': 14,             # Font size for legends
     'xtick.labelsize': 14,             # Font size for x-tick labels
     'ytick.labelsize': 14,             # Font size for y-tick labels
     'figure.dpi': 150,                 # DPI for displaying figures
@@ -25,7 +22,7 @@ os.chdir(repertoire)
 input_filename = 'configuration.in'  # Name of the input file
 
 
-nsteps = np.array([4000, 40e3])
+nsteps = np.array([4000, 6000, 10e3, 15e3, 30e3, 40e3, 50e3])
 nsimul = len(nsteps)  # Number of simulations to perform
 
 tfin = 259200 # Check tfin is the same in configuration.in !!
@@ -99,25 +96,34 @@ for i in range(nsimul):  # Iterate through the results of all simulations
 On représente l'erreur sur l'energie en fonction de N_steps et
 v_y en fonction de (Delta t)^norder, ou norder est un entier.
 """
-norder = 1  # Modify if needed
+norder = 2  # Modify if needed
+C = 10e9 # Constant for log log graph comparasion
 
 plt.figure()
 plt.loglog(nsteps, error, 'r+-', linewidth=lw)
-plt.loglog(nsteps, nsteps**-norder, linewidth=lw, ls='--', c='green', label=rf'~$1/N_{{steps}}^{norder}$')
+plt.loglog(nsteps, C*nsteps**-norder, linewidth=lw, ls='--', c='green', label=rf'$\sim 1/N_{{steps}}^{norder}$')
 plt.xlabel(r'$N_{steps}$', fontsize=fs)
-plt.ylabel(r'$|E_{mec}(t=0)-E_{mec}(t_f)|$ [J]', fontsize=fs)
+plt.ylabel(r'$\Delta E_{mec}(t_f)$ [J]', fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 plt.legend()
 plt.grid(True)
-
 plt.show()
+
 plt.figure()
 plt.plot(dt**norder, convergence_list_x, 'k+-', linewidth=lw)
-plt.xlabel(fr'$\Delta$ $t^{norder}$ [s]', fontsize=fs)
-plt.ylabel(r"$x'(t_f)$ [m/s]", fontsize=fs)
+plt.xlabel(fr'$\Delta$ $t^{norder}$ [$s^{norder}$]', fontsize=fs)
+plt.ylabel(r"$x'(t_f)$ [m]", fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 plt.grid(True)
+plt.show()
 
+plt.figure()
+plt.plot(dt**norder, convergence_list_y, 'k+-', linewidth=lw)
+plt.xlabel(fr'$\Delta$ $t^{norder}$ [$s^{norder}$]', fontsize=fs)
+plt.ylabel(r"$y'(t_f)$ [m]", fontsize=fs)
+plt.xticks(fontsize=fs)
+plt.yticks(fontsize=fs)
+plt.grid(True)
 plt.show()
