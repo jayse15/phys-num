@@ -74,8 +74,8 @@ double dist_terre;   // Distance terre-satellite
       dist_lune = sqrt(pow(f[2]-xl, 2) + pow(f[3], 2));
       double grav_term_l = -G_grav*ml/pow(dist_lune, 3);
       double grav_term_t = -G_grav*mt/pow(dist_terre, 3);
-      double ax = (f[2]-xt)*grav_term_t + (f[2]-xl)*grav_term_l + 2*Om*f[1] + pow(Om, 2)*f[2];
-      double ay = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] + pow(Om, 2)*f[3];
+      double ax = (f[2]-xt)*grav_term_t + (f[2]-xl)*grav_term_l + 2*Om*f[1] + pow(Om, 2)*f[2]; // accéleration selon x
+      double ay = f[3]*(grav_term_t + grav_term_l) - 2*Om*f[0] + pow(Om, 2)*f[3]; // accéleration selon y
 
       f[2]      = f[0];
       f[3]      = f[1];

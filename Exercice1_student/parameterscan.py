@@ -8,9 +8,7 @@ import os
 plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
-    'font.serif': ['Computer Modern'], # Use Computer Modern, the default LaTeX font
-    'xtick.labelsize': 14,             # Font size for x-tick labels
-    'ytick.labelsize': 14,             # Font size for y-tick labels
+    'font.serif': ['Computer Modern'], # Use Computer Modern
     'figure.dpi': 150,                 # DPI for displaying figures
 })
 
@@ -116,10 +114,6 @@ for alpha in param_2:
     #import pdb
     #pbd.set_trace()
 
-    """
-    On représente l'erreur sur l'energie en fonction de N_steps et
-    v_y en fonction de (Delta t)^norder, ou norder est un entier.
-    """
 
 # For alpha = 0 and 1
 norder = 1
