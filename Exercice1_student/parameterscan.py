@@ -27,7 +27,7 @@ xt = -dist*ml/(mt+ml)
 xl = dist*mt/(mt+ml)
 rl     = 1737100
 rt     = 6378100
-traj = True # Set to true if we want to generate trajectories
+traj = False # Set to true if we want to generate trajectories
 
 paramstr_1 = 'nsteps'  # Parameter name to scan
 
@@ -43,8 +43,6 @@ for alpha in param_2:
     convergence_list_x, convergence_list_y = [], []
     if traj == True:
         nsteps = np.array([4000, 40e3])
-    elif alpha == 0.5:
-        nsteps = np.array([4000, 6000, 10e3, 20e3, 50e3, 100e3, 200e3])
     else :
         nsteps = np.array([30e3, 40e3, 50e3, 75e3, 100e3, 150e3, 200e3]) # implicit and explicit too unstable for small N
 
@@ -155,7 +153,7 @@ plt.show()
 
 # For alpha = 0.5
 norder = 2
-C = 10e3
+C = 10e6
 plt.figure()
 plt.loglog(nsteps_list[1], errors[1], 'r+-', linewidth=lw)
 plt.loglog(nsteps_list[1], C*nsteps_list[1]**-norder, 'g--', linewidth=lw, label=rf'$\sim 1/N_{{steps}}^{norder}$')
