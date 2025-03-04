@@ -27,7 +27,7 @@ xt = -dist*ml/(mt+ml)
 xl = dist*mt/(mt+ml)
 rl     = 1737100
 rt     = 6378100
-traj = False # Set to true if we want to generate trajectories
+traj = True # Set to true if we want to generate trajectories
 
 paramstr_1 = 'nsteps'  # Parameter name to scan
 

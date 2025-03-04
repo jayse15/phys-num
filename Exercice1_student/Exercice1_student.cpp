@@ -34,6 +34,7 @@ double xt;           // Position de la Terre
 double xl;           // Position de la Lune
 double dist_lune;    // Distance lune-satellite
 double dist_terre;   // Distance terre-satellite
+bool collision;       // Vrai si le sattelite est entré en collision avec la Lune
 
   valarray<double> y0 = std::valarray<double>(0.e0, 4); // Correctly initialized
   valarray<double> y  = std::valarray<double>(0.e0, 4); // Correctly initialized
@@ -112,6 +113,10 @@ double dist_terre;   // Distance terre-satellite
         if(iteration>=maxit){
           cout << "WARNING: maximum number of iterations reached, error: " << error << endl;
         }
+        if ((sqrt(pow(y[2]-xl, 2) + pow(y[3], 2)) <= 1737100) and not collision) {
+          cout << "Collision at t = " << t << " at position : (" << y[2] << ", " << y[3] << ") !!" << endl;
+          collision = true;
+        }
       }
       else
       {
@@ -140,6 +145,7 @@ public:
       maxit    = configFile.get<unsigned int>("maxit", maxit);
       alpha    = configFile.get<double>("alpha", alpha);
       dt       = tfin/nsteps;
+      collision = false;
 
 
       // Ouverture du fichier de sortie
