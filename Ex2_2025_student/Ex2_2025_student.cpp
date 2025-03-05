@@ -28,7 +28,7 @@ private:
     if((!force && last>=sampling) || (force && last!=1))
     {
       double emec = 0.5*Ig*pow(thetadot, 2) - mu*B0*cos(theta);
-      double pnc  = B1*sin(Omega*t)*thetadot - kappa*pow(thetadot, 2);
+      double pnc  = -mu*B1*sin(Omega*t)*thetadot - kappa*pow(thetadot, 2);
 
       *outputFile << t << " " << theta << " " << thetadot << " " << emec << " " << pnc << endl;
       last = 1;
@@ -44,7 +44,7 @@ private:
   {
     valarray<double> acc = valarray<double>(2);
 
-    acc[0] = mu/Ig *(B0 + B1*sin(Omega*t_)*sin(phi)); // angular acceleration depending on theta and t only
+    acc[0] = -mu/Ig *(B0 + B1*sin(Omega*t_)*sin(phi)); // angular acceleration depending on theta and t only
     acc[1] = -kappa/Ig *w; // angular acceleration depending on w only
 
     return acc;
@@ -96,19 +96,17 @@ public:
     outputFile->precision(15);
 
     // define auxiliary variables if you need/want
-
-    // TODO: implement the expression for tFin, dt
-
+    dt   = 2*pi/(Omega*nsteps_per);
     if(N_excit>0){
       // simulate N_excit periods of excitation
       tFin = N_excit*2*pi/Omega;
-      dt   = 2*pi/(Omega*nsteps_per);
     }
     else{
       // simulate Nperiod periods of the eigenmode
       tFin = Nperiod*2*pi/Omega;
-      dt   = 2*pi/(Omega*nsteps_per);
     }
+    Ig = m*pow(L,2)/12; // Moment d'inertie
+
     cout << "final time is "<<"  "<< tFin << endl;
 
   }
