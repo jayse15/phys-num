@@ -28,7 +28,7 @@ private:
     if((!force && last>=sampling) || (force && last!=1))
     {
       double emec = 0.5*Ig*pow(thetadot, 2) - mu*B0*cos(theta);
-      double pnc  = -mu*B1*sin(Omega*t)*thetadot*sin(theta) - kappa*pow(thetadot, 2); // CORRIGER
+      double pnc  = -mu*B1*sin(Omega*t)*thetadot - kappa*pow(thetadot, 2); // CORRIGER
 
       *outputFile << t << " " << theta << " " << thetadot << " " << emec << " " << pnc << endl;
       last = 1;
@@ -44,7 +44,7 @@ private:
   {
     valarray<double> acc = valarray<double>(2);
 
-    acc[0] = -mu/Ig *(B0 + B1*sin(Omega*t_)*sin(phi)); // angular acceleration depending on theta and t only
+    acc[0] = -mu/Ig *(B0 + B1*sin(Omega*t_))*sin(phi); // angular acceleration depending on theta and t only
     acc[1] = -kappa/Ig *w; // angular acceleration depending on w only
 
     return acc;

@@ -97,7 +97,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     datas.append(data)
 
     plt.figure()
-    plt.plot(data[:,0], data[:,1], 'r+-', linewidth=lw)
+    plt.plot(data[:,0], data[:,1]%(2*np.pi), 'r+-', linewidth=lw)
     plt.xlabel(r'$t$', fontsize=fs)
     plt.ylabel(r'$\theta$', fontsize=fs)
     plt.xticks(fontsize=fs)
