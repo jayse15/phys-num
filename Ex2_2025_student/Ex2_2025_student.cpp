@@ -28,7 +28,7 @@ private:
     if((!force && last>=sampling) || (force && last!=1))
     {
       double emec = 0.5*Ig*pow(thetadot, 2) - mu*B0*cos(theta);
-      double pnc  = -mu*B1*sin(Omega*t)*thetadot - kappa*pow(thetadot, 2);
+      double pnc  = -mu*B1*sin(Omega*t)*thetadot*sin(theta) - kappa*pow(thetadot, 2); // CORRIGER
 
       *outputFile << t << " " << theta << " " << thetadot << " " << emec << " " << pnc << endl;
       last = 1;

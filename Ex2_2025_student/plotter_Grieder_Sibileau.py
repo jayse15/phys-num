@@ -77,6 +77,9 @@ for i in range(nsimul):
     subprocess.run(cmd, shell=True)
     print('Done.')
 
+lw = 1.5
+fs = 16
+
 errors = np.zeros(nsimul)
 convergence_list=[]
 datas = []
@@ -93,11 +96,14 @@ for i in range(nsimul):  # Iterate through the results of all simulations
 
     datas.append(data)
 
-
-
-
-lw = 1.5
-fs = 16
+    plt.figure()
+    plt.plot(data[:,0], data[:,1], 'r+-', linewidth=lw)
+    plt.xlabel(r'$t$', fontsize=fs)
+    plt.ylabel(r'$\theta$', fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.grid(True)
+    plt.show()
 
 # For alpha = 0.5
 norder = 2
@@ -109,6 +115,5 @@ plt.xlabel(r'$\Delta t$', fontsize=fs)
 plt.ylabel(r'$\delta (t_f)$', fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
-plt.legend()
 plt.grid(True)
 plt.show()
