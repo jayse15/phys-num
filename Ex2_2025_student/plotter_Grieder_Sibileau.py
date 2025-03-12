@@ -4,12 +4,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import pdb
 import os
+from scipy.stats import linregress
 
 plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 150,                 # DPI for displaying figures
+    'figure.dpi': 300,                 # DPI for displaying figures
 })
 
 # Parameters
@@ -47,11 +48,10 @@ L = parameters['L']
 B0 = parameters['B0']
 theta0 = parameters['theta0']
 
-nsteps_per = np.array([20, 30, 50, 75, 100, 150, 200, 300, 500, 1000, 2000])
+nsteps_per = np.array([100, 150, 200, 300, 500, 1000, 1500, 2000, 2500, 3000])
 dt   = 2*np.pi/(Omega*nsteps_per)
 nsimul = len(nsteps_per)
 om0 = np.sqrt(mu*B0/(m*L**2/12))
-
 
 if N_excit>0 :
       tFin = N_excit*2*np.pi/Omega
@@ -83,37 +83,56 @@ fs = 16
 errors = np.zeros(nsimul)
 convergence_list=[]
 datas = []
+traj=False # Set to true to see trajectories and Emec
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output[i])  # Load the output file of the i-th simulation
     t = data[:, 0]
 
-    theta = data[-1, 1]  # final position, velocity, energy
-    theta_dot = data[-1, 2]
+    theta_f = data[-1, 1]  # final position, velocity, energy
+    theta_dot_f = data[-1, 2]
 
-    error = np.sqrt(om0**2*(theta - -theta_a(tFin))**2 + (theta_dot-thetadot_a(tFin)))
+    error = np.sqrt(om0**2*(theta_f-theta_a(tFin))**2 + (theta_dot_f-thetadot_a(tFin))**2)
     errors[i] = error
-    convergence_list.append(theta)
+    convergence_list.append(theta_f)
 
     datas.append(data)
 
-    plt.figure()
-    plt.plot(data[:,0], data[:,1]%(2*np.pi), 'r+-', linewidth=lw)
-    plt.xlabel(r'$t$', fontsize=fs)
-    plt.ylabel(r'$\theta$', fontsize=fs)
-    plt.xticks(fontsize=fs)
-    plt.yticks(fontsize=fs)
-    plt.grid(True)
-    plt.show()
+    if traj==True :
+        # plot trajectories
+        plt.figure()
+        plt.plot(data[:,0], data[:,1], 'r+-', linewidth=lw)
+        plt.xlabel(r'$t$', fontsize=fs)
+        plt.ylabel(r'$\theta$', fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        plt.grid(True)
+        plt.show()
 
-# For alpha = 0.5
-norder = 2
-C = 10e6
+        # plot energy
+        plt.figure()
+        plt.plot(data[:,0], data[:,3], 'r+-', linewidth=lw)
+        plt.xlabel(r'$t$', fontsize=fs)
+        plt.ylabel(r'$E_{mec}$', fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        plt.grid(True)
+        plt.show()
+
+
+# plot final error
 plt.figure()
-plt.loglog(dt, errors, 'r+-', linewidth=lw)
-#plt.loglog(dt, C*dt**2, 'g--', linewidth=lw, label=rf'$\sim \Delta t^2$')
+plt.loglog(dt, errors, 'r+', linewidth=lw, ms=10)
+
+# Perform linear regression for convergence order
+slope, intercept, r_value, p_value, std_err = linregress(np.log(dt), np.log(errors))
+
+y_fit = np.exp(intercept) * dt**slope
+plt.loglog(dt, y_fit, c='black', ls='-', label=rf"$y \sim \Delta t^{{{slope:.2f}}}$", linewidth=lw)
+
 plt.xlabel(r'$\Delta t$', fontsize=fs)
 plt.ylabel(r'$\delta (t_f)$', fontsize=fs)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 plt.grid(True)
+plt.legend()
 plt.show()
