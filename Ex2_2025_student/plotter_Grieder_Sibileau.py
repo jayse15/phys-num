@@ -103,10 +103,27 @@ for i in range(nsimul):  # Iterate through the results of all simulations
         plt.plot(data[:,0], data[:,1], 'r+-', linewidth=lw)
         plt.xlabel(r'$t$', fontsize=fs)
         plt.ylabel(r'$\theta$', fontsize=fs)
+    plt.figure()
+    plt.plot(data[:,0], data[:,1]%(2*np.pi), 'r+-', linewidth=lw)
+    plt.xlabel(r'$t$', fontsize=fs)
+    plt.ylabel(r'$\theta$', fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.grid(True)
+    plt.show()
+
+    if i == nsimul-1 :
+        times = np.arange(0, len(data), 20)
+        poincare = data[times, 1:3]
+        plt.figure()
+        plt.plot(poincare[:,0], poincare[:,1], linewidth=lw)
+        plt.xlabel(r'$\theta$', fontsize=fs)
+        plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs)
         plt.grid(True)
         plt.show()
+
 
         # plot energy
         plt.figure()
