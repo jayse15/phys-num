@@ -10,7 +10,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 300,                 # DPI for displaying figures
+    'figure.dpi': 150,                 # DPI for displaying figures
 })
 
 # Parameters
@@ -48,17 +48,18 @@ L = parameters['L']
 B0 = parameters['B0']
 theta0 = parameters['theta0']
 
-nsteps_per = np.array([100, 150, 200, 300, 500, 1000, 1500, 2000, 2500, 3000])
-dt   = 2*np.pi/(Omega*nsteps_per)
-nsimul = len(nsteps_per)
+nsteps_per = np.array([5, 10, 50])
 om0 = np.sqrt(mu*B0/(m*L**2/12))
+Omega = 2*om0
+nsimul = len(nsteps_per)
+
 
 if N_excit>0 :
       tFin = N_excit*2*np.pi/Omega
+      dt   = 2*np.pi/(Omega*nsteps_per)
 else:
-      tFin = Nperiod*2*np.pi/Omega
-
-dt   = 2*np.pi/(Omega*nsteps_per)
+      tFin = Nperiod*2*np.pi/om0
+      dt   = 2*np.pi/(om0*nsteps_per)
 
 def theta_a(t):
     return theta0*np.cos(om0*t)
@@ -83,7 +84,14 @@ fs = 16
 errors = np.zeros(nsimul)
 convergence_list=[]
 datas = []
-traj=False # Set to true to see trajectories and Emec
+traj=True # Set to true to see trajectories and Emec
+# Set to true for corresponding question, e.g A=True for question a)
+A = False
+B = True
+C = False
+D = False
+E = False
+
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output[i])  # Load the output file of the i-th simulation
     t = data[:, 0]
@@ -119,33 +127,48 @@ for i in range(nsimul):  # Iterate through the results of all simulations
         plt.show()
 
     if i == nsimul-1 :
-        # plot Poincarre section
-        times = np.arange(0, len(data), 20)
-        poincare = data[times, 1:3]
-        plt.figure()
-        plt.plot(poincare[:,0], poincare[:,1], linewidth=lw)
-        plt.xlabel(r'$\theta$', fontsize=fs)
-        plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
-        plt.xticks(fontsize=fs)
-        plt.yticks(fontsize=fs)
-        plt.grid(True)
-        plt.show()
+        if  B:
+            # plot phase space
+            phase = data[:, 1:3]
+            plt.figure()
+            plt.plot(phase[:,0], phase[:,1], 'o', ms=1)
+            plt.xlabel(r'$\theta$', fontsize=fs)
+            plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
+            plt.xticks(fontsize=fs)
+            plt.yticks(fontsize=fs)
+            plt.grid(True)
+            plt.show()
+
+        if C:
+            # plot Poincarre section
+            times = np.arange(0, len(data), 20)
+            poincare = data[times, 1:3]
+            plt.figure()
+            plt.plot(poincare[:,0], poincare[:,1], 'o', linewidth=lw)
+            plt.xlabel(r'$\theta$', fontsize=fs)
+            plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
+            plt.xticks(fontsize=fs)
+            plt.yticks(fontsize=fs)
+            plt.grid(True)
+            plt.show()
 
 
-# plot final error
-plt.figure()
-plt.loglog(dt, errors, 'r+', linewidth=lw, ms=10)
 
-# Perform linear regression for convergence order
-slope, intercept, r_value, p_value, std_err = linregress(np.log(dt), np.log(errors))
+if A:
+    # plot final error
+    plt.figure()
+    plt.loglog(dt, errors, 'r+', linewidth=lw, ms=10)
 
-y_fit = np.exp(intercept) * dt**slope
-plt.loglog(dt, y_fit, c='black', ls='-', label=rf"$y \sim \Delta t^{{{slope:.2f}}}$", linewidth=lw)
+    # Perform linear regression for convergence order
+    slope, intercept, r_value, p_value, std_err = linregress(np.log(dt), np.log(errors))
 
-plt.xlabel(r'$\Delta t$', fontsize=fs)
-plt.ylabel(r'$\delta (t_f)$', fontsize=fs)
-plt.xticks(fontsize=fs)
-plt.yticks(fontsize=fs)
-plt.grid(True)
-plt.legend()
-plt.show()
+    y_fit = np.exp(intercept) * dt**slope
+    plt.loglog(dt, y_fit, c='black', ls='-', label=rf"$y \sim \Delta t^{{{slope:.2f}}}$", linewidth=lw)
+
+    plt.xlabel(r'$\Delta t$', fontsize=fs)
+    plt.ylabel(r'$\delta (t_f)$', fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.grid(True)
+    plt.legend()
+    plt.show()

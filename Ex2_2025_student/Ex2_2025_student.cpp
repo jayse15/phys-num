@@ -95,17 +95,22 @@ public:
     outputFile = new ofstream(configFile.get<string>("output").c_str());
     outputFile->precision(15);
 
+    Ig = m*pow(L,2)/12; // Moment d'inertie
+    om_0 = sqrt(mu*B0/Ig); // Mode propre
+    Omega = 2*om_0; // Mode excité
+
     // define auxiliary variables if you need/want
-    dt   = 2*pi/(Omega*nsteps_per);
     if(N_excit>0){
       // simulate N_excit periods of excitation
       tFin = N_excit*2*pi/Omega;
+      dt   = 2*pi/(Omega*nsteps_per);
     }
     else{
       // simulate Nperiod periods of the eigenmode
-      tFin = Nperiod*2*pi/Omega;
+      tFin = Nperiod*2*pi/om_0;
+      dt   = 2*pi/(om_0*nsteps_per);
     }
-    Ig = m*pow(L,2)/12; // Moment d'inertie
+
 
     cout << "final time is "<<"  "<< tFin << endl;
 
