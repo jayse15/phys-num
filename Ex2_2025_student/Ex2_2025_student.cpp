@@ -28,7 +28,7 @@ private:
     if((!force && last>=sampling) || (force && last!=1))
     {
       double emec = 0.5*Ig*pow(thetadot, 2) - mu*B0*cos(theta);
-      double pnc  = -mu*B1*sin(Omega*t)*thetadot - kappa*pow(thetadot, 2); // CORRIGER
+      double pnc  = -mu*B1*sin(Omega*t)*thetadot - kappa*pow(thetadot, 2);
 
       *outputFile << t << " " << theta << " " << thetadot << " " << emec << " " << pnc << endl;
       last = 1;
@@ -99,7 +99,6 @@ public:
     om_0 = sqrt(mu*B0/Ig); // Mode propre
     Omega = 2*om_0; // Mode excité
 
-    // define auxiliary variables if you need/want
     if(N_excit>0){
       // simulate N_excit periods of excitation
       tFin = N_excit*2*pi/Omega;

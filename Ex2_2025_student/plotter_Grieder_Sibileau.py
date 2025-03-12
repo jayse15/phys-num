@@ -13,6 +13,7 @@ plt.rcParams.update({
     'figure.dpi': 150,                 # DPI for displaying figures
 })
 
+
 # Parameters
 executable = 'a.out'  # Name of the executable (NB: .exe extension is required on Windows)
 repertoire = r"./"
@@ -48,7 +49,7 @@ L = parameters['L']
 B0 = parameters['B0']
 theta0 = parameters['theta0']
 
-nsteps_per = np.array([5, 10, 50])
+nsteps_per = np.array([50, 100, 150, 200])
 om0 = np.sqrt(mu*B0/(m*L**2/12))
 Omega = 2*om0
 nsimul = len(nsteps_per)
@@ -79,7 +80,7 @@ for i in range(nsimul):
     print('Done.')
 
 lw = 1.5
-fs = 16
+fs = 20
 
 errors = np.zeros(nsimul)
 convergence_list=[]
@@ -108,7 +109,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     if traj==True :
         # plot trajectories
         plt.figure()
-        plt.plot(data[:,0], data[:,1], 'r+-', linewidth=lw)
+        plt.plot(data[:,0], data[:,1], 'r-', linewidth=lw, ms=2)
         plt.xlabel(r'$t$', fontsize=fs)
         plt.ylabel(r'$\theta$', fontsize=fs)
         plt.xticks(fontsize=fs)
@@ -118,7 +119,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
 
         # plot energy
         plt.figure()
-        plt.plot(data[:,0], data[:,3], 'r+-', linewidth=lw)
+        plt.plot(data[:,0], data[:,3], 'r-', linewidth=lw, ms=2)
         plt.xlabel(r'$t$', fontsize=fs)
         plt.ylabel(r'$E_{mec}$', fontsize=fs)
         plt.xticks(fontsize=fs)
