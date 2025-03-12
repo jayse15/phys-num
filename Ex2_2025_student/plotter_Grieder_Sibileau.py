@@ -106,7 +106,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     plt.show()
     
     if i == nsimul-1 : 
-        times = np.arange(0, len(data), 20)
+        times = np.arange(0, len(data), nsteps_per[-1])
         poincare = data[times, 1:3]
         plt.figure()
         plt.plot(poincare[:,0], poincare[:,1], linewidth=lw)
