@@ -10,7 +10,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 150,                 # DPI for displaying figures
+    'figure.dpi': 200,                 # DPI for displaying figures
 })
 
 
@@ -49,7 +49,7 @@ L = parameters['L']
 B0 = parameters['B0']
 theta0 = parameters['theta0']
 
-nsteps_per = np.array([50, 100, 150, 200])
+nsteps_per = np.array([50, 60, 70, 80, 100, 125, 150, 200, 250, 300])
 om0 = np.sqrt(mu*B0/(m*L**2/12))
 Omega = 2*om0
 nsimul = len(nsteps_per)
@@ -85,7 +85,7 @@ fs = 20
 errors = np.zeros(nsimul)
 convergence_list=[]
 datas = []
-traj=True # Set to true to see trajectories and Emec
+traj=False # Set to true to see trajectories and Emec
 # Set to true for corresponding question, e.g A=True for question a)
 A = False
 B = True
@@ -110,7 +110,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
         # plot trajectories
         plt.figure()
         plt.plot(data[:,0], data[:,1], 'r-', linewidth=lw, ms=2)
-        plt.xlabel(r'$t$', fontsize=fs)
+        plt.xlabel(r'$t$ [s]', fontsize=fs)
         plt.ylabel(r'$\theta$', fontsize=fs)
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs)
@@ -120,8 +120,8 @@ for i in range(nsimul):  # Iterate through the results of all simulations
         # plot energy
         plt.figure()
         plt.plot(data[:,0], data[:,3], 'r-', linewidth=lw, ms=2)
-        plt.xlabel(r'$t$', fontsize=fs)
-        plt.ylabel(r'$E_{mec}$', fontsize=fs)
+        plt.xlabel(r'$t$ [s]', fontsize=fs)
+        plt.ylabel(r'$E_{mec}$ [J]', fontsize=fs)
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs)
         plt.grid(True)
@@ -135,6 +135,27 @@ for i in range(nsimul):  # Iterate through the results of all simulations
             plt.plot(phase[:,0], phase[:,1], 'o', ms=1)
             plt.xlabel(r'$\theta$', fontsize=fs)
             plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
+            plt.xticks(fontsize=fs)
+            plt.yticks(fontsize=fs)
+            plt.grid(True)
+            plt.show()
+
+            # plot dEmec vs Pnc
+            Pnc = data[:, [0,4]]
+            dEmec = data[:, [0,5]]
+            plt.figure()
+            plt.plot(Pnc[:,0], Pnc[:,1], linewidth=lw, c='purple', alpha=0.5)
+            plt.xlabel(r'$t$  [s]', fontsize=fs)
+            plt.ylabel(r'$P_{nc}(t)$ [J/s]', fontsize=fs)
+            plt.xticks(fontsize=fs)
+            plt.yticks(fontsize=fs)
+            plt.grid(True)
+            plt.show()
+
+            plt.figure()
+            plt.plot(dEmec[:,0], dEmec[:,1], linewidth=lw, c='orange', alpha=0.5)
+            plt.xlabel(r'$t$  [s]', fontsize=fs)
+            plt.ylabel(r'$\frac{dE_{mec}(t)}{dt}$ [J/s]', fontsize=fs)
             plt.xticks(fontsize=fs)
             plt.yticks(fontsize=fs)
             plt.grid(True)
@@ -166,10 +187,21 @@ if A:
     y_fit = np.exp(intercept) * dt**slope
     plt.loglog(dt, y_fit, c='black', ls='-', label=rf"$y \sim \Delta t^{{{slope:.2f}}}$", linewidth=lw)
 
-    plt.xlabel(r'$\Delta t$', fontsize=fs)
-    plt.ylabel(r'$\delta (t_f)$', fontsize=fs)
+    plt.xlabel(r'$\Delta t$ [s]', fontsize=fs)
+    plt.ylabel(r'$\delta (t_f)$ [J]', fontsize=fs)
     plt.xticks(fontsize=fs)
     plt.yticks(fontsize=fs)
     plt.grid(True)
     plt.legend()
+    plt.show()
+
+if B:
+    # plot final positions
+    plt.figure()
+    plt.plot(dt**2, convergence_list, c='k', marker='+', markeredgecolor='red', linewidth=lw, ms=10)
+    plt.xlabel(r'$\Delta t^2$ [s]', fontsize=fs)
+    plt.ylabel(r'$\theta(t_{fin})$ [J]', fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.grid(True)
     plt.show()
