@@ -68,16 +68,14 @@ def theta_a(t):
 def thetadot_a(t):
     return -om0*theta0*np.sin(om0*t)
 
-import re
-
-def modify_config(filename, variable, new_value):
+def modify_config(filename, variable, new_value): # This function is used in question C to modify the initial values of theta0 and thetadot0
     with open(filename, 'r') as file:
         lines = file.readlines()
 
     with open(filename, 'w') as file:
         for line in lines:
-            if re.match(rf'^\s*{variable}\s*=', line):  # Handles spaces around '='
-                file.write(f"{variable} = {new_value}\n")  # Keeps consistent formatting
+            if line.strip().startswith(variable + "="): 
+                file.write(f"{variable}={new_value}\n") 
             else:
                 file.write(line)
 
@@ -120,16 +118,6 @@ fs = 20
 errors = np.zeros(nsimul)
 convergence_list=[]
 datas = []
-<<<<<<< HEAD
-=======
-traj=False # Set to true to see trajectories and Emec
-# Set to true for corresponding question, e.g A=True for question a)
-A = False
-B = True
-C = False
-D = False
-E = False
->>>>>>> a2fdb8a9cef7242ab7eeb4fa62eb1d6a38352321
 
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output[i])  # Load the output file of the i-th simulation
@@ -178,28 +166,6 @@ for i in range(nsimul):  # Iterate through the results of all simulations
             plt.grid(True)
             plt.show()
 
-<<<<<<< HEAD
-if C:
-    poincare_list = []
-    for out in output: 
-        data = np.loadtxt(output[i])  # Load the output file of the i-th simulation
-        t = data[:, 0]
-        theta_f = data[-1, 1]  # final position, velocity, energy
-        theta_dot_f = data[-1, 2]
-        datas.append(data)
-        # plot Poincarre section
-        times = np.arange(0, len(data), nsteps_per[i])
-        poincare = data[times, 1:3]   
-        poincare_list += [poincare]    
-    plt.figure()
-    plt.plot(poincare[:,0], poincare[:,1], 'o', linewidth=lw)
-    plt.xlabel(r'$\theta$', fontsize=fs)
-    plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
-    plt.xticks(fontsize=fs)
-    plt.yticks(fontsize=fs)
-    plt.grid(True)
-    plt.show()
-=======
             # plot dEmec vs Pnc
             Pnc = data[:, [0,4]]
             dEmec = data[:, [0,5]]
@@ -221,20 +187,26 @@ if C:
             plt.grid(True)
             plt.show()
 
-        if C:
-            # plot Poincarre section
-            times = np.arange(0, len(data), 20)
-            poincare = data[times, 1:3]
-            plt.figure()
-            plt.plot(poincare[:,0], poincare[:,1], 'o', linewidth=lw)
-            plt.xlabel(r'$\theta$', fontsize=fs)
-            plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
-            plt.xticks(fontsize=fs)
-            plt.yticks(fontsize=fs)
-            plt.grid(True)
-            plt.show()
-
->>>>>>> a2fdb8a9cef7242ab7eeb4fa62eb1d6a38352321
+if C:
+    # plot Poincarre section
+    poincare_list = []
+    for out in output:
+        data = np.loadtxt(output[out])  # Load the output file of the i-th simulation
+        t = data[:, 0]
+        theta_f = data[-1, 1]  # final position, velocity, energy
+        theta_dot_f = data[-1, 2]
+        datas.append(data)
+        times = np.arange(0, len(data), nsteps_per[-1])
+        poincare = data[times, 1:3]
+        poincare_list.append(poincare)
+    plt.figure()
+    plt.plot(poincare_list[:,0], poincare_list[:,1], 'o', linewidth=lw)
+    plt.xlabel(r'$\theta$', fontsize=fs)
+    plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.grid(True)
+    plt.show()
 
 
 if A:
