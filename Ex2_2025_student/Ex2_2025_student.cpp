@@ -51,7 +51,7 @@ private:
   }
 
 
-    void step()
+  void step()
   {
     valarray<double> a0 = acceleration(theta, thetadot, t);
     theta += thetadot*dt + 0.5*(a0[0]+a0[1])*pow(dt, 2);
