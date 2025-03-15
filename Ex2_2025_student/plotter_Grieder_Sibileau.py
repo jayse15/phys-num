@@ -188,7 +188,7 @@ if A:
     plt.loglog(dt, y_fit, c='black', ls='-', label=rf"$y \sim \Delta t^{{{slope:.2f}}}$", linewidth=lw)
 
     plt.xlabel(r'$\Delta t$ [s]', fontsize=fs)
-    plt.ylabel(r'$\delta (t_f)$ [J]', fontsize=fs)
+    plt.ylabel(r'$\delta (t_{\mathrm{fin}})$ [J]', fontsize=fs)
     plt.xticks(fontsize=fs)
     plt.yticks(fontsize=fs)
     plt.grid(True)
@@ -200,7 +200,7 @@ if B:
     plt.figure()
     plt.plot(dt**2, convergence_list, c='k', marker='+', markeredgecolor='red', linewidth=lw, ms=10)
     plt.xlabel(r'$\Delta t^2$ [s]', fontsize=fs)
-    plt.ylabel(r'$\theta(t_{fin})$ [J]', fontsize=fs)
+    plt.ylabel(r'$\theta(t_{\mathrm{fin}})$ [J]', fontsize=fs)
     plt.xticks(fontsize=fs)
     plt.yticks(fontsize=fs)
     plt.grid(True)
