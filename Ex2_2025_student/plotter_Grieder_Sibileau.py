@@ -49,7 +49,7 @@ L = parameters['L']
 B0 = parameters['B0']
 theta0 = parameters['theta0']
 
-nsteps_per = np.array([50, 60, 70, 80, 100, 125, 150, 200, 250, 300])
+nsteps_per = np.array([50, 60])
 om0 = np.sqrt(mu*B0/(m*L**2/12))
 Omega = 2*om0
 nsimul = len(nsteps_per)
@@ -68,20 +68,8 @@ def theta_a(t):
 def thetadot_a(t):
     return -om0*theta0*np.sin(om0*t)
 
-import re
-def modify_config(filename, variable, new_value):
-    with open(filename, 'r') as file:
-        lines = file.readlines()
-
-    with open(filename, 'w') as file:
-        for line in lines:
-            if re.match(rf'^\s*{variable}\s*=', line):  # Handles spaces around '='
-                file.write(f"{variable} = {new_value}\n")  # Keeps consistent formatting
-            else:
-                file.write(line)
-
 # Set to true to see trajectories and Emec
-traj=False 
+traj=False
 # Set to true for corresponding question, e.g A=True for question a)
 A = False
 B = False
@@ -91,20 +79,18 @@ E = False
 
 # Simulations
 output = []
-if C: 
-    thetas = np.arange(0, 2*np.pi, np.pi/4)
-    thetas_dot = np.arange(0, 1e3, 2e2)
-    for O in thetas: 
-        for O_dot in thetas_dot: 
-            modify_config(input_filename, 'theta0', O)
-            modify_config(input_filename, 'thetadot0', O_dot)
-            output_file = f"{'nsteps'}={nsteps_per[-1]}.out"
+if C:
+    thetas = np.linspace(0, 2*np.pi, 30)
+    thetas_dot = np.linspace(-20, 20, 30)
+    for O in thetas:
+        for O_dot in thetas_dot:
+            output_file = f"poincarre/theta={O}_theta_dot={O_dot}.out"
             output.append(output_file)
-            cmd = f"{repertoire}{executable} {input_filename} {'nsteps'}={nsteps_per[-1]} output={output_file}"
+            cmd = f"{repertoire}{executable} {input_filename} nsteps={nsteps_per[-1]} sampling={nsteps_per[-1]} theta0={O} thetadot0={O_dot} output={output_file}"
             print(cmd)
             subprocess.run(cmd, shell=True)
             print('Done.')
-else : 
+else :
     for i in range(nsimul):
         output_file = f"{'nsteps'}={nsteps_per[i]}.out"
         output.append(output_file)
@@ -119,19 +105,27 @@ fs = 20
 errors = np.zeros(nsimul)
 convergence_list=[]
 datas = []
-
+if C:
+    plt.figure()
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output[i])  # Load the output file of the i-th simulation
     t = data[:, 0]
+    if C:
+        plt.plot(data[:,1]%(2*np.pi), data[:,2], 'o', ms=1)
+        plt.xlabel(r'$\theta$', fontsize=fs)
+        plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        plt.grid(True)
+    else:
+        theta_f = data[-1, 1]  # final position, velocity, energy
+        theta_dot_f = data[-1, 2]
 
-    theta_f = data[-1, 1]  # final position, velocity, energy
-    theta_dot_f = data[-1, 2]
+        error = np.sqrt(om0**2*(theta_f-theta_a(tFin))**2 + (theta_dot_f-thetadot_a(tFin))**2)
+        errors[i] = error
+        convergence_list.append(theta_f)
 
-    error = np.sqrt(om0**2*(theta_f-theta_a(tFin))**2 + (theta_dot_f-thetadot_a(tFin))**2)
-    errors[i] = error
-    convergence_list.append(theta_f)
-
-    datas.append(data)
+        datas.append(data)
 
     if traj==True :
         # plot trajectories
@@ -188,28 +182,6 @@ for i in range(nsimul):  # Iterate through the results of all simulations
             plt.grid(True)
             plt.show()
 
-if C:
-    # plot Poincarre section
-    poincare_list = []
-    for out in output:
-        data = np.loadtxt(out) 
-        t = data[:, 0]
-        theta_f = data[-1, 1]  
-        theta_dot_f = data[-1, 2]
-        datas.append(data)
-        times = np.arange(0, len(data), nsteps_per[-1])
-        poincare = data[times, 1:3]
-        poincare_list.append(poincare)
-    poincare_array = np.vstack(poincare_list)  # Stack list into 2D NumPy array
-    plt.figure()
-    plt.plot(poincare_array[:, 0], poincare_array[:, 1], 'o', linewidth=lw)
-    plt.xlabel(r'$\theta$', fontsize=fs)
-    plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
-    plt.xticks(fontsize=fs)
-    plt.yticks(fontsize=fs)
-    plt.grid(True)
-    plt.show()
-
 
 if A:
     # plot final error
@@ -223,7 +195,7 @@ if A:
     plt.loglog(dt, y_fit, c='black', ls='-', label=rf"$y \sim \Delta t^{{{slope:.2f}}}$", linewidth=lw)
 
     plt.xlabel(r'$\Delta t$ [s]', fontsize=fs)
-    plt.ylabel(r'$\delta (t_f)$ [J]', fontsize=fs)
+    plt.ylabel(r'$\delta (t_{\mathrm{fin}})$ [J]', fontsize=fs)
     plt.xticks(fontsize=fs)
     plt.yticks(fontsize=fs)
     plt.grid(True)
@@ -235,8 +207,11 @@ if B:
     plt.figure()
     plt.plot(dt**2, convergence_list, c='k', marker='+', markeredgecolor='red', linewidth=lw, ms=10)
     plt.xlabel(r'$\Delta t^2$ [s]', fontsize=fs)
-    plt.ylabel(r'$\theta(t_{fin})$ [J]', fontsize=fs)
+    plt.ylabel(r'$\theta(t_{\mathrm{fin}})$ [J]', fontsize=fs)
     plt.xticks(fontsize=fs)
     plt.yticks(fontsize=fs)
     plt.grid(True)
+    plt.show()
+
+if C:
     plt.show()
