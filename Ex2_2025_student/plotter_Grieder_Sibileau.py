@@ -80,11 +80,12 @@ E = False
 # Simulations
 output = []
 if C:
-    thetas = np.linspace(0, 2*np.pi, 30)
-    thetas_dot = np.linspace(-20, 20, 30)
+    thetas = np.linspace(0, 2*np.pi, 20)
+    thetas_dot = np.linspace(-10, 10, 20)
+    nsimul=len(thetas)*len(thetas_dot)
     for O in thetas:
         for O_dot in thetas_dot:
-            output_file = f"poincarre/theta={O}_theta_dot={O_dot}.out"
+            output_file = f"poincarre/theta={O:.3f}_theta_dot={O_dot:.3f}.out"
             output.append(output_file)
             cmd = f"{repertoire}{executable} {input_filename} nsteps={nsteps_per[-1]} sampling={nsteps_per[-1]} theta0={O} thetadot0={O_dot} output={output_file}"
             print(cmd)
