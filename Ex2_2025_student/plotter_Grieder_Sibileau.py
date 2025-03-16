@@ -91,8 +91,8 @@ E = False
 # Simulations
 output = []
 if C: 
-    thetas = np.arange(0, 2*np.pi, np.pi/4)
-    thetas_dot = np.arange(0, 1e2, 5e1)
+    thetas = np.arange(0, 2*np.pi, np.pi/8)
+    thetas_dot = np.arange(0, 1e5, 5e5)
     for O in thetas: 
         for O_dot in thetas_dot: 
             modify_config(input_filename, 'theta0', O)
@@ -191,16 +191,17 @@ if C:
     # plot Poincarre section
     poincare_list = []
     for out in output:
-        data = np.loadtxt(output[out])  # Load the output file of the i-th simulation
+        data = np.loadtxt(out) 
         t = data[:, 0]
-        theta_f = data[-1, 1]  # final position, velocity, energy
+        theta_f = data[-1, 1]  
         theta_dot_f = data[-1, 2]
         datas.append(data)
         times = np.arange(0, len(data), nsteps_per[-1])
         poincare = data[times, 1:3]
         poincare_list.append(poincare)
+    poincare_array = np.vstack(poincare_list)  # Stack list into 2D NumPy array
     plt.figure()
-    plt.plot(poincare_list[:,0], poincare_list[:,1], 'o', linewidth=lw)
+    plt.plot(poincare_array[:, 0], poincare_array[:, 1], 'o', linewidth=lw)
     plt.xlabel(r'$\theta$', fontsize=fs)
     plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
     plt.xticks(fontsize=fs)
