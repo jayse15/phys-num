@@ -92,8 +92,8 @@ E = False
 # Simulations
 output = []
 if C: 
-    thetas = np.arange(0, 2*np.pi, np.pi/16)
-    thetas_dot = np.arange(0, 1e3, 5e2)
+    thetas = np.arange(0, 2*np.pi, np.pi/4)
+    thetas_dot = np.arange(0, 1e3, 2e2)
     for O in thetas: 
         for O_dot in thetas_dot: 
             modify_config(input_filename, 'theta0', O)
