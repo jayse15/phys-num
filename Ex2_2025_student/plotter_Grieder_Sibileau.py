@@ -10,7 +10,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 200,                 # DPI for displaying figures
+    'figure.dpi': 150,                 # DPI for displaying figures
 })
 
 
@@ -68,14 +68,15 @@ def theta_a(t):
 def thetadot_a(t):
     return -om0*theta0*np.sin(om0*t)
 
-def modify_config(filename, variable, new_value): # This function is used in question C to modify the initial values of theta0 and thetadot0
+import re
+def modify_config(filename, variable, new_value):
     with open(filename, 'r') as file:
         lines = file.readlines()
 
     with open(filename, 'w') as file:
         for line in lines:
-            if line.strip().startswith(variable + "="): 
-                file.write(f"{variable}={new_value}\n") 
+            if re.match(rf'^\s*{variable}\s*=', line):  # Handles spaces around '='
+                file.write(f"{variable} = {new_value}\n")  # Keeps consistent formatting
             else:
                 file.write(line)
 
@@ -91,8 +92,8 @@ E = False
 # Simulations
 output = []
 if C: 
-    thetas = np.arange(0, 2*np.pi, np.pi/8)
-    thetas_dot = np.arange(0, 1e5, 5e5)
+    thetas = np.arange(0, 2*np.pi, np.pi/16)
+    thetas_dot = np.arange(0, 1e3, 5e2)
     for O in thetas: 
         for O_dot in thetas_dot: 
             modify_config(input_filename, 'theta0', O)
