@@ -10,7 +10,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 150,                 # DPI for displaying figures
+    'figure.dpi': 200,                 # DPI for displaying figures
 })
 
 
@@ -49,7 +49,7 @@ L = parameters['L']
 B0 = parameters['B0']
 theta0 = parameters['theta0']
 
-nsteps_per = np.array([50, 60])
+nsteps_per = np.array([50])
 om0 = np.sqrt(mu*B0/(m*L**2/12))
 Omega = 2*om0
 nsimul = len(nsteps_per)
@@ -68,34 +68,44 @@ def theta_a(t):
 def thetadot_a(t):
     return -om0*theta0*np.sin(om0*t)
 
+def delta_ab(a, adot, b, bdot):
+    return np.sqrt(om0**2 * (a - b)**2 + (adot - bdot)**2)
+
 # Set to true to see trajectories and Emec
 traj=False
 # Set to true for corresponding question, e.g A=True for question a)
 A = False
 B = False
-C = True
+C = False
 D = False
-E = False
+E = True
 
 # Simulations
 output = []
-if C:
-    thetas = np.linspace(0, 2*np.pi, 20)
-    thetas_dot = np.linspace(-10, 10, 20)
+if C or D or E:
+    if C or E:
+        thetas = np.linspace(-np.pi, np.pi, 4)
+        thetas_dot = np.linspace(-15, 15, 4)
+    elif D :
+        thetas = [0, 1e-6, np.pi, np.pi+(1e-6)]
+        thetas_dot = [5]
+
     nsimul=len(thetas)*len(thetas_dot)
     for O in thetas:
         for O_dot in thetas_dot:
-            output_file = f"poincarre/theta={O:.3f}_theta_dot={O_dot:.3f}.out"
+            output_file = f"data/theta={O:.6f}_theta_dot={O_dot:.6f}.out"
             output.append(output_file)
-            cmd = f"{repertoire}{executable} {input_filename} nsteps={nsteps_per[-1]} sampling={nsteps_per[-1]} theta0={O} thetadot0={O_dot} output={output_file}"
+            cmd = f"{repertoire}{executable} {input_filename} nsteps={nsteps_per[-1]} theta0={O} thetadot0={O_dot} output={output_file}"
+            if C or E:
+                cmd+= f" sampling={nsteps_per[-1]}"
             print(cmd)
             subprocess.run(cmd, shell=True)
             print('Done.')
 else :
     for i in range(nsimul):
-        output_file = f"{'nsteps'}={nsteps_per[i]}.out"
+        output_file = f"data/nsteps={nsteps_per[i]}.out"
         output.append(output_file)
-        cmd = f"{repertoire}{executable} {input_filename} {'nsteps'}={nsteps_per[i]} output={output_file}"
+        cmd = f"{repertoire}{executable} {input_filename} nsteps={nsteps_per[i]} output={output_file}"
         print(cmd)
         subprocess.run(cmd, shell=True)
         print('Done.')
@@ -106,27 +116,36 @@ fs = 20
 errors = np.zeros(nsimul)
 convergence_list=[]
 datas = []
-if C:
+if C or E:
     plt.figure()
+    colors = ['red', 'blue', 'black']
+
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output[i])  # Load the output file of the i-th simulation
     t = data[:, 0]
-    if C:
-        plt.plot(data[:,1]%(2*np.pi), data[:,2], 'o', ms=1)
+    datas.append(data)
+    if C or E:
+        if C:
+            x = data[:,1] % (2 * np.pi)
+            x = np.where(x<np.pi, x, x-(2*np.pi))
+        elif E:
+            x = data[:,1] % (4 * np.pi)
+        color = colors[i % len(colors)]
+        plt.plot(x, data[:,2], '.', c=color, ms=0.5)
         plt.xlabel(r'$\theta$', fontsize=fs)
         plt.ylabel(r'$\dot{\theta}$', fontsize=fs)
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs)
         plt.grid(True)
-    else:
-        theta_f = data[-1, 1]  # final position, velocity, energy
+    if A or B:
+        theta_f = data[-1, 1]  # final position, velocity
         theta_dot_f = data[-1, 2]
 
-        error = np.sqrt(om0**2*(theta_f-theta_a(tFin))**2 + (theta_dot_f-thetadot_a(tFin))**2)
-        errors[i] = error
-        convergence_list.append(theta_f)
-
-        datas.append(data)
+        if A:
+            error = delta_ab(theta_f, theta_dot_f, theta_a(tFin), thetadot_a(tFin))
+            errors[i] = error
+        if B:
+            convergence_list.append(theta_f)
 
     if traj==True :
         # plot trajectories
@@ -146,6 +165,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
         plt.ylabel(r'$E_{mec}$ [J]', fontsize=fs)
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs)
+        plt.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
         plt.grid(True)
         plt.show()
 
@@ -171,6 +191,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
             plt.ylabel(r'$P_{nc}(t)$ [J/s]', fontsize=fs)
             plt.xticks(fontsize=fs)
             plt.yticks(fontsize=fs)
+            plt.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
             plt.grid(True)
             plt.show()
 
@@ -180,6 +201,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
             plt.ylabel(r'$\frac{dE_{mec}(t)}{dt}$ [J/s]', fontsize=fs)
             plt.xticks(fontsize=fs)
             plt.yticks(fontsize=fs)
+            plt.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
             plt.grid(True)
             plt.show()
 
@@ -193,10 +215,10 @@ if A:
     slope, intercept, r_value, p_value, std_err = linregress(np.log(dt), np.log(errors))
 
     y_fit = np.exp(intercept) * dt**slope
-    plt.loglog(dt, y_fit, c='black', ls='-', label=rf"$y \sim \Delta t^{{{slope:.2f}}}$", linewidth=lw)
+    plt.loglog(dt, y_fit, c='black', ls='-', label=rf"$y \sim \Delta t^{{{slope:.3f}}}$", linewidth=lw)
 
     plt.xlabel(r'$\Delta t$ [s]', fontsize=fs)
-    plt.ylabel(r'$\delta (t_{\mathrm{fin}})$ [J]', fontsize=fs)
+    plt.ylabel(r'$\delta (t_{\mathrm{fin}})$', fontsize=fs)
     plt.xticks(fontsize=fs)
     plt.yticks(fontsize=fs)
     plt.grid(True)
@@ -208,11 +230,51 @@ if B:
     plt.figure()
     plt.plot(dt**2, convergence_list, c='k', marker='+', markeredgecolor='red', linewidth=lw, ms=10)
     plt.xlabel(r'$\Delta t^2$ [s]', fontsize=fs)
-    plt.ylabel(r'$\theta(t_{\mathrm{fin}})$ [J]', fontsize=fs)
+    plt.ylabel(r'$\theta(t_{\mathrm{fin}})$', fontsize=fs)
     plt.xticks(fontsize=fs)
     plt.yticks(fontsize=fs)
+    plt.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
     plt.grid(True)
     plt.show()
 
-if C:
+if C or E:
+    plt.show()
+
+if D:
+
+    error_stable = delta_ab(datas[0][:, 1], datas[0][:, 2], datas[0][:, 1], datas[0][:, 2])
+    error_chaos = delta_ab(datas[2][:, 1], datas[2][:, 2], datas[3][:, 1], datas[3][:, 2])
+    plt.figure()
+    plt.plot(t, error_stable, c='b', linewidth=lw, ms=2, label=r'$\theta_{0,a} = 0$,  $\theta_{0,b} = 10^{-6}$')
+    plt.xlabel(r'$t$ [s]', fontsize=fs)
+    plt.ylabel(r'$\delta_{ab}(t)$', fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.grid(True)
+
+    plt.plot(t, error_chaos, c='r', linewidth=lw, ms=2, label=r'$\theta_{0,a} = \pi$, $\theta_{0,b} = \pi + 10^{-6}$')
+    plt.xlabel(r'$t$ [s]', fontsize=fs)
+    plt.ylabel(r'$\delta_{ab}(t)$', fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.grid(True)
+    plt.legend()
+
+    plt.show()
+
+    # Perform linear regression for lyapunov
+    indices = t<8.5
+    slope, intercept, r_value, p_value, std_err = linregress(t[indices], np.log(error_chaos[indices]))
+    y_fit = np.exp(intercept) * np.exp(slope*t[indices])
+
+    plt.figure()
+    plt.plot(t, error_chaos, c='r', linewidth=lw, ms=2, label=r'$\theta_{0,a} = \pi$, $\theta_{0,b} = \pi + 10^{-6}$')
+    plt.plot(t[indices], y_fit, c='black', ls='--', linewidth=1, label=rf"$y \sim e^{{{slope:.3f}t}}$",)
+    plt.xlabel(r'$t$ [s]', fontsize=fs)
+    plt.ylabel(r'$\delta_{ab}(t)$', fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.grid(True)
+    plt.yscale('log')
+    plt.legend()
     plt.show()

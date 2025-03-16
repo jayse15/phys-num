@@ -1,14 +1,14 @@
 Omega    =  1.0	// frequency of oscillating magnetic field
-kappa    = 0.0 	// coefficient for friction
+kappa    = 2e-5 	// coefficient for friction
 m        = 0.075 // mass
 L        = 0.08 // length
-B1       = 0.002	//  B1 part of magnetic fields (oscillating part amplitude)
+B1       = 0.018	//  B1 part of magnetic fields (oscillating part amplitude)
 B0       = 0.01 //  B0 part of magnetic fields (static part amplitude)
 mu       = 0.2  //  magnetic moment
 theta0   = 1e-3
 thetadot0 = 0
 sampling = 1  // number of time steps between two writings on file
-N_excit  = 7500  // number of periods of excitation
+N_excit  = 10000  // number of periods of excitation
 Nperiod  = 3  // number of periods of oscillation of the eigenmode
 nsteps   = 20 // number of time steps per period
 output   = Ex2.txt // name of the output file
