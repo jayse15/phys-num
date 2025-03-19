@@ -1,0 +1,15 @@
+tFin = 63072000
+mS = 1.98892e30
+mJ = 1.8982e27
+rS=6.9634e8
+rJ=6.9911e7
+a = 778.479e9
+vx0 = -11000
+vy0 = 2000
+nsel_physics = 2
+adapt = false
+tol = 30
+norder = 4
+sampling = 1 //frequency of data writing
+output = output.out
+nsteps = 3000
