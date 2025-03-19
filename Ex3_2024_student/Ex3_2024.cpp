@@ -32,7 +32,7 @@ private:
     {
       double Energy = compute_energy(x);
       *outputFile << t << " "<< x[0] << " " << x[1] << " "<< x[2] << " " << x[3] << " " \
-      << Energy<< " "<< nsteps<< endl; // write output on file
+      << Energy<< " "<< nsteps << endl; // write output on file
       last = 1;
     }
     else
@@ -57,8 +57,8 @@ private:
       grav_term_j = -GM*mJ/pow(dist(x, xJ), 3);
     }
     double grav_term_s = -GM*mS/pow(dist(x, xS), 3);
-    double ax = (x[2]-xS)*grav_term_s + (x[2]-xJ)*grav_term_j + 2*Om*f[1] + pow(Om, 2)*f[2]; // accéleration selon x
-    double ay = x[3]*(grav_term_s + grav_term_j) - 2*Om*f[0] + pow(Om, 2)*f[3]; // accéleration selon y
+    double ax = (x[2]-xS)*grav_term_s + (x[2]-xJ)*grav_term_j + 2*Om*x[1] + pow(Om, 2)*x[2]; // accéleration selon x
+    double ay = x[3]*(grav_term_s + grav_term_j) - 2*Om*x[0] + pow(Om, 2)*x[3]; // accéleration selon y
 
     f[2]      = x[0];
     f[3]      = x[1];
@@ -126,7 +126,6 @@ public:
       configFile.process(argv[i]);
 
     tFin         = configFile.get<double>("tFin");            // t final (overwritten if N_excit >0)
-    dt       = configFile.get<double>("dt");            // time step (overwritten if nsteps_per >0)
     mJ         = configFile.get<double>("mJ");              // mass of Jupiter
     mS         = configFile.get<double>("mS");              // mass of the Sun
     rS         = configFile.get<double>("rS");              // Radius of the Sun
@@ -139,7 +138,7 @@ public:
     tol          = configFile.get<double>("tol");             //tolerance of the adaptive scheme
     sampling     = configFile.get<int>("sampling");     // number of time steps between two writings on file
     nsteps       = configFile.get<int>("nsteps");        // number of time step per period
-    norder       = configFile.get<int>("norder");        // number of time step per period
+    norder       = configFile.get<int>("norder");        // convergence order
 
 
     // Ouverture du fichier de sortie
