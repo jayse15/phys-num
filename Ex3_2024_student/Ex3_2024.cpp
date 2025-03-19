@@ -15,7 +15,7 @@ private:
   double rS, rJ, a, Om;
   double GM=6.674e-11;
   double mS, mJ, xS, xJ;
-  int N_excit, nsteps;
+  int nsteps;
   int sampling;
   int last;
   int  nsel_physics;
@@ -30,7 +30,7 @@ private:
   {
     if((!write && last>=sampling) || (write && last!=1))
     {
-      double Energy = compute_energy(x[0],x[1],x[2],x[3]);
+      double Energy = compute_energy(x);
       *outputFile << t << " "<< x[0] << " " << x[1] << " "<< x[2] << " " << x[3] << " " \
       << Energy<< " "<< nsteps<< endl; // write output on file
       last = 1;
@@ -116,7 +116,6 @@ std::valarray<double> RK4_do_onestep(const std::valarray<double>& yold, double d
 public:
   Exercice3(int argc, char* argv[])
   {
-    const double pi=3.1415926535897932384626433832795028841971e0;
     string inputPath("configuration.in"); // Fichier d'input par defaut
     if(argc>1) // Fichier d'input specifie par l'utilisateur ("./Exercice3 config_perso.in")
       inputPath = argv[1];
@@ -161,7 +160,8 @@ public:
     initial_condition();
     x=x0;
     last = 0;
-    printOut(true);
+    printOut(true); // Position initiale
+
     std::valarray<double> y1;
     std::valarray<double> y2;
     double d;
@@ -169,29 +169,28 @@ public:
     while (t<tFin){
       if (adapt==false){
         x = RK4_do_onestep(x, dt);
-      }
-      else{
-        y1 = RK4_do_onestep(x, dt);
-        y2 = RK4_do_onestep(x, dt/2);
-        d = abs(y1-y2).max();
-
-        if (d <= tol){
-          dt *= pow(tol/d, 1/(norder+1));
-        } else {
-          while (d>tol){
-            dt *= 0.999*pow(tol/d, 1/(norder+1));
-            y1 = RK4_do_onestep(x, dt);
-            y2 = RK4_do_onestep(x, dt/2);
-            d = abs(y1-y2).max();
+        t+=dt;
+      } else {
+          dt = min(dt, tFin-t);
+          y1 = RK4_do_onestep(x, dt);
+          y2 = RK4_do_onestep(RK4_do_onestep(x, dt/2), dt/2);
+          d = abs(y1-y2).max();
+          if (d <= tol){
+            t+=dt;
+            dt *= pow(tol/d, 1/(norder+1));
+          } else {
+            while (d>tol){
+              dt *= 0.999*pow(tol/d, 1/(norder+1));
+              y1 = RK4_do_onestep(x, dt);
+              y2 = RK4_do_onestep(x, dt/2);
+              d = abs(y1-y2).max();
+            }
+            t+=dt/2;
           }
-        }
-        x = y2;
+          x = y2;
       }
+      printOut(true);
     }
-
-
-
-    printOut(true); // ecrire le dernier pas de temps
   };
 
 };
