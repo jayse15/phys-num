@@ -174,11 +174,19 @@ public:
         y1 = RK4_do_onestep(x, dt);
         y2 = RK4_do_onestep(x, dt/2);
         d = abs(y1-y2).max();
-        if (d <= tol){
-          dt *= pow(tol/d, 1/(n+1));
-        }
 
-    };
+        if (d <= tol){
+          dt *= pow(tol/d, 1/(norder+1));
+        } else {
+          while (d>tol){
+            dt *= 0.999*pow(tol/d, 1/(norder+1));
+            y1 = RK4_do_onestep(x, dt);
+            y2 = RK4_do_onestep(x, dt/2);
+            d = abs(y1-y2).max();
+          }
+        }
+        x = y2;
+      }
     }
 
 
