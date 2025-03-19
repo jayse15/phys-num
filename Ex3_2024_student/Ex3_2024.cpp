@@ -45,7 +45,7 @@ private:
     std::valarray<double> f(0.0, 4);
 
     if ((nsel_physics!=1) and (nsel_physics!=2)){
-        cerr << "No dynamics corresponds to this index" << endl;
+        cerr << "No dynamics correspond to this index" << endl;
         return f;
     }
 
@@ -95,10 +95,10 @@ void initial_condition(void){
     xS = -a*mJ/(mS+mJ);
     xJ = a*mS/(mS+mJ);
     Om = sqrt(GM*mS/(pow(a, 2)*xJ));
+    x0[1] -= Om*x0[2];
   }
   x0[2] = xS+2*a;
   x0[3] = 0;
-  x0[1] -= Om*x0[2];
 }
 
 std::valarray<double> RK4_do_onestep(const std::valarray<double>& yold, double dt) {
@@ -109,7 +109,7 @@ std::valarray<double> RK4_do_onestep(const std::valarray<double>& yold, double d
     k3 = dt*get_f(yold+k2/2);
     k4 = dt*get_f(yold+k3);
 
-    return yold + 1/6*(k1 + 2*k2 + 2*k3 + k4);
+    return yold + 1.0/6.0*(k1 + 2*k2 + 2*k3 + k4);
 }
 
 
@@ -172,19 +172,19 @@ public:
       } else {
           dt = min(dt, tFin-t);
           y1 = RK4_do_onestep(x, dt);
-          y2 = RK4_do_onestep(RK4_do_onestep(x, dt/2), dt/2);
+          y2 = RK4_do_onestep(RK4_do_onestep(x, dt/2.0), dt/2.0);
           d = abs(y1-y2).max();
           if (d <= tol){
             t+=dt;
-            dt *= pow(tol/d, 1/(norder+1));
+            dt *= pow(tol/d, 1.0/(norder+1.0));
           } else {
             while (d>tol){
-              dt *= 0.999*pow(tol/d, 1/(norder+1));
+              dt *= 0.9*pow(tol/d, 1.0/(norder+1.0));
               y1 = RK4_do_onestep(x, dt);
-              y2 = RK4_do_onestep(x, dt/2);
+              y2 = RK4_do_onestep(x, dt/2.0);
               d = abs(y1-y2).max();
             }
-            t+=dt/2;
+            t+=dt/2.0;
           }
           x = y2;
       }

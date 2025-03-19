@@ -55,9 +55,9 @@ else:
 traj = True # Set to true if we want to generate trajectories
 
 nsteps = np.array([20e3, 30e3, 50e3, 60e3, 70e3, 100e3])
-epsilon = np.array([10e3, 8e3, 5e3, 4e3, 3e3, 2e3, 1e3, 800, 600, 500, 300, 200])
-param_list = nsteps
-param = 'nsteps'
+epsilon = np.array([1e7, 5e7, 1e8, 2e8, 5e8, 7e8, 1e9, 5e9, 1e10])
+param_list = epsilon
+param = 'tol'
 
 # Simulations
 output = []  # List to store output file names
