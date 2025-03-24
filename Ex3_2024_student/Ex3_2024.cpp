@@ -181,10 +181,10 @@ public:
             while (d>tol){
               dt *= 0.9*pow(tol/d, 1.0/(norder+1.0));
               y1 = RK4_do_onestep(x, dt);
-              y2 = RK4_do_onestep(x, dt/2.0);
+              y2 = RK4_do_onestep(RK4_do_onestep(x, dt/2.0), dt/2.0);
               d = abs(y1-y2).max();
             }
-            t+=dt/2.0;
+            t+=dt;
           }
           x = y2;
       }
