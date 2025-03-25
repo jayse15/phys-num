@@ -12,7 +12,7 @@ class Exercice3
 
 private:
   double t, dt, tFin;
-  double rS, rJ, a, Om;
+  double a, Om;
   double GM=6.674e-11;
   double mS, mJ, xS, xJ;
   int nsteps;
@@ -95,10 +95,8 @@ void initial_condition(void){
     xS = -a*mJ/(mS+mJ);
     xJ = a*mS/(mS+mJ);
     Om = sqrt(GM*mS/(pow(a, 2)*xJ));
-    x0[1] -= Om*x0[2];
+    x0[1] -= Om*x0[2]; // Speed in inertial reference must be given
   }
-  x0[2] = xS+2*a;
-  x0[3] = 0;
 }
 
 std::valarray<double> RK4_do_onestep(const std::valarray<double>& yold, double dt) {
@@ -126,13 +124,13 @@ public:
       configFile.process(argv[i]);
 
     tFin         = configFile.get<double>("tFin");            // t final (overwritten if N_excit >0)
-    mJ         = configFile.get<double>("mJ");              // mass of Jupiter
-    mS         = configFile.get<double>("mS");              // mass of the Sun
-    rS         = configFile.get<double>("rS");              // Radius of the Sun
-    rJ          = configFile.get<double>("rJ");              // Radius of Jupiter
+    mJ           = configFile.get<double>("mJ");              // mass of Jupiter
+    mS           = configFile.get<double>("mS");              // mass of the Sun
     a            = configFile.get<double>("a");               // demi grand-axe (solei-terre hyp MCU)
     x0[0]        = configFile.get<double>("vx0");             // vitesse initiale x
     x0[1]        = configFile.get<double>("vy0");             // vitesse initiale y
+    x0[2]        = configFile.get<double>("x0");              // position initiale x
+    x0[3]        = configFile.get<double>("y0");              // position initiale y
     nsel_physics = configFile.get<int>("nsel_physics");       //1) one body problem around mass#2 or 2) one body in rotating reference frame of {1,2}
     adapt        = configFile.get<bool>("adapt");             //if 1=true -> adaptive dt, if 0=false -> fixed dt
     tol          = configFile.get<double>("tol");             //tolerance of the adaptive scheme

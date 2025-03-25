@@ -54,60 +54,165 @@ else:
 
 traj = True # Set to true if we want to generate trajectories
 
-nsteps = np.array([20e3, 30e3, 50e3, 60e3, 70e3, 100e3])
-epsilon = np.array([1e7, 5e7, 1e8, 2e8, 5e8, 7e8, 1e9, 5e9, 1e10])
-param_list = epsilon
-param = 'tol'
+nsteps = np.array([10e3, 20e3, 30e3, 50e3, 60e3, 70e3, 100e3])
+epsilon = np.array([1e5, 1e6, 5e6, 1e7, 1e8, 1e9, 1e10])
 
 # Simulations
-output = []  # List to store output file names
-convergence_list_x, convergence_list_y = [], []
-nsimul = len(param_list)  # Number of simulations to perform
-dt = tfin / nsteps
+output_e = []
+output_n = []
+convergence_list_x_n, convergence_list_y_n = [], []
+convergence_list_x_e, convergence_list_y_e = [], []
+nsimul = len(nsteps)  # Number of simulations to perform
+esimul = len(epsilon)
 
 for i in range(nsimul):
-    output_file = f"data/{param}={param_list[i]}.out"
-    output.append(output_file)
-    cmd = f"{repertoire}{executable} {input_filename} {param}={param_list[i]} output={output_file}"
+    output_file = f"data/nsteps={nsteps[i]}.out"
+    output_n.append(output_file)
+    cmd = f"{repertoire}{executable} {input_filename} nsteps={nsteps[i]} output={output_file}"
     print(cmd)
     subprocess.run(cmd, shell=True)
     print('Done.')
 
-error=[]
-datas=[]
+for i in range(esimul):
+    output_file = f"data/tol={epsilon[i]}.out"
+    output_e.append(output_file)
+    cmd = f"{repertoire}{executable} {input_filename} tol={epsilon[i]} adapt=true output={output_file}"
+    print(cmd)
+    subprocess.run(cmd, shell=True)
+    print('Done.')
+
+error_n=[]
+datas_n=[]
 for i in range(nsimul):  # Iterate through the results of all simulations
-    data = np.loadtxt(output[i])  # Load the output file of the i-th simulation
+    data = np.loadtxt(output_n[i])  # Load the output file of the i-th simulation
     t = data[:, 0]
 
     xx = data[-1, 3]
     yy = data[-1, 4]
     En = data[-1, 5]
-    convergence_list_x.append(xx)
-    convergence_list_y.append(yy)
-    error.append(np.abs(En - data[0, 5])) # We use energy since it is the only known quantity at the end
+    convergence_list_x_n.append(xx)
+    convergence_list_y_n.append(yy)
+    error_n.append(np.abs(En - data[0, 5])) # We use energy since it is the only known quantity at the end
 
-    datas.append(data)
+    datas_n.append(data)
+
+error_e=[]
+datas_e=[]
+jsteps=[]
+for i in range(esimul):  # Iterate through the results of all simulations
+    data = np.loadtxt(output_e[i])  # Load the output file of the i-th simulation
+    t = data[:, 0]
+
+    xx = data[-1, 3]
+    yy = data[-1, 4]
+    En = data[-1, 5]
+    convergence_list_x_e.append(xx)
+    convergence_list_y_e.append(yy)
+    error_e.append(np.abs(En - data[0, 5])) # We use energy since it is the only known quantity at the end
+    jsteps.append(len(data))
+    datas_e.append(data)
+
 
 lw = 1.5
 fs = 16
 if traj == True :
     fig1, ax1 = plt.subplots()
     fig2, ax2 = plt.subplots()
-    for i in range(nsimul):
-        ax1.plot(datas[i][:, 3], datas[i][:, 4], label = rf"${param}={param_list[i]}$")
-        ax2.plot(datas[i][:, 0], datas[i][:, 5], label = f"{param}={param_list[i]}")
 
-    sun = patches.Circle((xS, 0), rS, fill=True, color='orange', lw=2, label='Soleil')
-    #earth = patches.Circle((xt, 0), rt, fill=True, color='blue', lw=2, label='Earth')
-    ax1.add_patch(sun)
-    #ax.add_patch(earth)
+    rmin=[]
+    rmax=[]
+    vmin=[]
+    vmax=[]
+
+    param_list=nsteps #change for tolerance
+    datas=datas_n #change for tolerance
+    p=r'N_{\mathrm{steps}}' #change for tolerance
+
+    for i in range(nsimul):
+        label = f'{param_list[i]:.2e}'
+        label = label.replace(
+            'e+0', r'\times 10^{').replace(
+                'e+', r'\times 10^{').replace(
+                    'e-0', r'\times 10^{-').replace(
+                        'e-', r'\times 10^{-') + '}'
+        ax1.plot(datas[i][:, 3], datas[i][:, 4], label = rf"${p}={label}$")
+        ax2.plot(datas[i][:, 0], datas[i][:, 5], label = rf"${p}={label}$")
+
+        v = np.sqrt(datas[i][:, 1]**2 + datas[i][:, 2]**2)
+        r = np.sqrt(datas[i][:, 3]**2 + datas[i][:, 4]**2)
+
+        rmin.append(r.min())
+        rmax.append(r.max())
+        vmin.append(v.min())
+        vmax.append(v.max())
+
     ax1.set_aspect('equal', adjustable='box')
     ax1.legend()
-    ax1.set_xlabel(r"$x'$ [m]", fontsize=fs)
-    ax1.set_ylabel(r"$y'$ [m]", fontsize=fs)
+    ax1.set_xlabel(r"$x$ [m]", fontsize=fs)
+    ax1.set_ylabel(r"$y$ [m]", fontsize=fs)
 
     ax2.set_xlabel(r't [s]', fontsize=fs)
     ax2.set_ylabel(r'$E_{mec}$ [J]', fontsize=fs)
     ax2.legend()
 
     plt.show()
+
+    plt.figure()
+    plt.plot(param_list, rmin, 'k+-', label=r'$r_{\mathrm{min}}$')
+    plt.xlabel(rf"${p}$", fontsize=fs)
+    plt.ylabel(r"$r$ [m]", fontsize=fs)
+    plt.hlines(y=10, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$r_{\mathrm{min, true}}$')
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.plot(param_list, rmax, 'k+-', label=r'$r_{\mathrm{max}}$')
+    plt.xlabel(rf"${p}$", fontsize=fs)
+    plt.ylabel(r"$r$ [m]", fontsize=fs)
+    plt.hlines(y=10, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$r_{\mathrm{max, true}}$')
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.plot(param_list, vmin, 'k+-', label=r'$v_{\mathrm{min}}$')
+    plt.xlabel(rf"${p}$", fontsize=fs)
+    plt.ylabel(r"$v$ [m/s]", fontsize=fs)
+    plt.hlines(y=10, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$v_{\mathrm{min, true}}$')
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.plot(param_list, vmax, 'k+-', label=r'$v_{\mathrm{max}}$')
+    plt.xlabel(rf"${p}$", fontsize=fs)
+    plt.ylabel(r"$v$ [m/s]", fontsize=fs)
+    plt.hlines(y=10, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$v_{\mathrm{max, true}}$')
+    plt.legend()
+    plt.show()
+
+
+
+plt.figure()
+plt.plot(nsteps, convergence_list_x_n, 'k+-', label='Schéma fixe')
+plt.plot(jsteps, convergence_list_x_e, 'r+-', label='Schéma adaptif')
+plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
+plt.ylabel(r"$x_f$ [m/s]", fontsize=fs)
+plt.legend()
+plt.show()
+
+plt.figure()
+plt.plot(nsteps, convergence_list_y_n, 'k+-', label='Schéma fixe')
+plt.plot(jsteps, convergence_list_y_e, 'r+-', label='Schéma adaptif')
+plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
+plt.ylabel(r"$y_f$ [m/s]", fontsize=fs)
+plt.legend()
+plt.show()
+
+plt.figure()
+plt.loglog(nsteps, error_n, 'k+-', label='Schéma fixe')
+plt.loglog(jsteps, error_e, 'r+-', label='Schéma adaptif')
+plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
+plt.ylabel(r"$\Delta E_{\mathrm{mec}}$ [J/kg]", fontsize=fs)
+plt.legend()
+plt.show()
+
+print(jsteps)
