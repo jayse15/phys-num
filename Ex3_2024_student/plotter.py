@@ -45,14 +45,19 @@ rS     = parameters['rS']
 rJ     = parameters['rJ']
 a     = parameters['a']
 nsel_physics = parameters['nsel_physics']
+vx0 = parameters['vx0']
+vy0 = parameters['vy0']
 
 s_per_year = 3.1536e7
 GM=6.674e-11
 
-rmin_true = 3.5e10
-rmax_true = 5.5e12
-vmin_true = 550
-vmax_true = 80e3
+L0= abs(2*a*vy0)
+E0 = 0.5*(vx0**2 + vy0**2) + GM*mS/(2*a)
+sqrt_term = np.sqrt(GM**2 * mS**2 + 2*E0*L0**2)
+rmin_true = (GM*mS - sqrt_term)/(2*E0)
+rmax_true = (GM*mS + sqrt_term)/(2*E0)
+vmin_true = L0/rmax_true
+vmax_true = L0/vmin_true
 
 if(nsel_physics==1):
     xS = 0
@@ -60,8 +65,8 @@ else:
     xS = -a*mJ/(mS+mJ)
     xJ = a*mS/(mS+mJ)
 
-traj = False # Set to true if we want to generate trajectories
-adapt_traj = True # Set to true to have adaptive trajectories
+traj = True # Set to true if we want to generate trajectories
+adapt_traj = False # Set to true to have adaptive trajectories
 
 nsteps = np.array([30e3, 50e3, 60e3, 70e3, 100e3, 200e3, 300e3])
 epsilon = np.array([0.001, 0.1, 0.5, 5, 100, 500, 1000])
@@ -216,28 +221,24 @@ plt.figure()
 plt.plot(1/np.array(jsteps)**4, convergence_list_x_e, 'r+-')
 plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
 plt.ylabel(r"$x_f$ [m/s]", fontsize=fs)
-plt.legend()
 plt.show()
 
 plt.figure()
 plt.plot(1/np.array(jsteps)**4, convergence_list_y_e, 'r+-')
 plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
 plt.ylabel(r"$y_f$ [m/s]", fontsize=fs)
-plt.legend()
 plt.show()
 
 plt.figure()
 plt.plot(1/np.array(nsteps)**4, convergence_list_x_n, 'b+-')
 plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
 plt.ylabel(r"$x_f$ [m/s]", fontsize=fs)
-plt.legend()
 plt.show()
 
 plt.figure()
 plt.plot(1/np.array(nsteps)**4, convergence_list_y_n, 'b+-')
 plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
 plt.ylabel(r"$y_f$ [m/s]", fontsize=fs)
-plt.legend()
 plt.show()
 
 plt.figure()
