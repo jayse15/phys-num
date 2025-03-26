@@ -46,7 +46,13 @@ rJ     = parameters['rJ']
 a     = parameters['a']
 nsel_physics = parameters['nsel_physics']
 
+s_per_year = 3.1536e7
 GM=6.674e-11
+
+rmin_true = 3.5e10
+rmax_true = 5.5e12
+vmin_true = 550
+vmax_true = 80e3
 
 if(nsel_physics==1):
     xS = 0
@@ -54,11 +60,11 @@ else:
     xS = -a*mJ/(mS+mJ)
     xJ = a*mS/(mS+mJ)
 
-traj = True # Set to true if we want to generate trajectories
+traj = False # Set to true if we want to generate trajectories
 adapt_traj = True # Set to true to have adaptive trajectories
 
 nsteps = np.array([30e3, 50e3, 60e3, 70e3, 100e3, 200e3, 300e3])
-epsilon = np.array([0.001, 0.01, 0.02, 0.05, 0.1, 0.5, 1])
+epsilon = np.array([0.001, 0.1, 0.5, 5, 100, 500, 1000])
 
 # Simulations
 output_e = []
@@ -86,9 +92,10 @@ for i in range(esimul):
 
 error_n=[]
 datas_n=[]
+t_n=[]
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output_n[i])  # Load the output file of the i-th simulation
-    t = data[:, 0]
+    t_n = data[:, 0]
 
     xx = data[-1, 3]
     yy = data[-1, 4]
@@ -103,9 +110,11 @@ for i in range(nsimul):  # Iterate through the results of all simulations
 error_e=[]
 datas_e=[]
 jsteps=[]
+t_e=[]
+dt=[]
 for i in range(esimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output_e[i])  # Load the output file of the i-th simulation
-    t = data[:, 0]
+    t_e = data[:, 0]
 
     xx = data[-1, 3]
     yy = data[-1, 4]
@@ -114,7 +123,7 @@ for i in range(esimul):  # Iterate through the results of all simulations
     convergence_list_y_e.append(yy)
     error_e.append(np.abs(En - data[0, 5])) # We use energy since it is the only known quantity at the end
     jsteps.append(len(data))
-    dt = np.diff(t)
+    dt = np.diff(t_e)
     datas_e.append(data)
 
 
@@ -133,12 +142,14 @@ if traj == True :
         param_list=epsilon
         datas=datas_e
         p=r'\epsilon'
+        n=esimul
     else :
         param_list=nsteps
         datas=datas_n
         p=r'N_{\mathrm{steps}}'
+        n=nsimul
 
-    for i in range(nsimul):
+    for i in range(n):
         label = f'{param_list[i]:.2e}'
         label = label.replace(
             'e+0', r'\times 10^{').replace(
@@ -146,7 +157,7 @@ if traj == True :
                     'e-0', r'\times 10^{-').replace(
                         'e-', r'\times 10^{-') + '}'
         ax1.plot(datas[i][:, 3], datas[i][:, 4], label = rf"${p}={label}$")
-        ax2.plot(datas[i][:, 0], datas[i][:, 5], label = rf"${p}={label}$")
+        ax2.plot(datas[i][:, 0]/s_per_year, datas[i][:, 5], label = rf"${p}={label}$")
 
         v = np.sqrt(datas[i][:, 1]**2 + datas[i][:, 2]**2)
         r = np.sqrt(datas[i][:, 3]**2 + datas[i][:, 4]**2)
@@ -161,7 +172,7 @@ if traj == True :
     ax1.set_xlabel(r"$x$ [m]", fontsize=fs)
     ax1.set_ylabel(r"$y$ [m]", fontsize=fs)
 
-    ax2.set_xlabel(r't [s]', fontsize=fs)
+    ax2.set_xlabel(r't [an]', fontsize=fs)
     ax2.set_ylabel(r'$E_{mec}$ [J]', fontsize=fs)
     ax2.legend()
 
@@ -171,7 +182,7 @@ if traj == True :
     plt.plot(param_list, rmin, 'k+-', label=r'$r_{\mathrm{min}}$')
     plt.xlabel(rf"${p}$", fontsize=fs)
     plt.ylabel(r"$r$ [m]", fontsize=fs)
-    plt.hlines(y=10, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$r_{\mathrm{min, true}}$')
+    plt.hlines(y=rmin_true, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$r_{\mathrm{min, true}}$')
     plt.legend()
     plt.show()
 
@@ -179,7 +190,7 @@ if traj == True :
     plt.plot(param_list, rmax, 'k+-', label=r'$r_{\mathrm{max}}$')
     plt.xlabel(rf"${p}$", fontsize=fs)
     plt.ylabel(r"$r$ [m]", fontsize=fs)
-    plt.hlines(y=10, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$r_{\mathrm{max, true}}$')
+    plt.hlines(y=rmax_true, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$r_{\mathrm{max, true}}$')
     plt.legend()
     plt.show()
 
@@ -187,7 +198,7 @@ if traj == True :
     plt.plot(param_list, vmin, 'k+-', label=r'$v_{\mathrm{min}}$')
     plt.xlabel(rf"${p}$", fontsize=fs)
     plt.ylabel(r"$v$ [m/s]", fontsize=fs)
-    plt.hlines(y=10, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$v_{\mathrm{min, true}}$')
+    plt.hlines(y=vmin_true, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$v_{\mathrm{min, true}}$')
     plt.legend()
     plt.show()
 
@@ -195,32 +206,50 @@ if traj == True :
     plt.plot(param_list, vmax, 'k+-', label=r'$v_{\mathrm{max}}$')
     plt.xlabel(rf"${p}$", fontsize=fs)
     plt.ylabel(r"$v$ [m/s]", fontsize=fs)
-    plt.hlines(y=10, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$v_{\mathrm{max, true}}$')
+    plt.hlines(y=vmax_true, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$v_{\mathrm{max, true}}$')
     plt.legend()
     plt.show()
 
 
 
 plt.figure()
-plt.plot(nsteps, convergence_list_x_n, 'k+-', label='Schéma fixe')
-plt.plot(jsteps, convergence_list_x_e, 'r+-', label='Schéma adaptif')
-plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
+plt.plot(1/np.array(jsteps)**4, convergence_list_x_e, 'r+-')
+plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
 plt.ylabel(r"$x_f$ [m/s]", fontsize=fs)
 plt.legend()
 plt.show()
 
 plt.figure()
-plt.plot(nsteps, convergence_list_y_n, 'k+-', label='Schéma fixe')
-plt.plot(jsteps, convergence_list_y_e, 'r+-', label='Schéma adaptif')
-plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
+plt.plot(1/np.array(jsteps)**4, convergence_list_y_e, 'r+-')
+plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
 plt.ylabel(r"$y_f$ [m/s]", fontsize=fs)
 plt.legend()
 plt.show()
 
 plt.figure()
-plt.loglog(nsteps, error_n, 'k+-', label='Schéma fixe')
+plt.plot(1/np.array(nsteps)**4, convergence_list_x_n, 'b+-')
+plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
+plt.ylabel(r"$x_f$ [m/s]", fontsize=fs)
+plt.legend()
+plt.show()
+
+plt.figure()
+plt.plot(1/np.array(nsteps)**4, convergence_list_y_n, 'b+-')
+plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
+plt.ylabel(r"$y_f$ [m/s]", fontsize=fs)
+plt.legend()
+plt.show()
+
+plt.figure()
+plt.loglog(nsteps, error_n, 'b+-', label='Schéma fixe')
 plt.loglog(jsteps, error_e, 'r+-', label='Schéma adaptif')
 plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
 plt.ylabel(r"$\Delta E_{\mathrm{mec}}$ [J/kg]", fontsize=fs)
 plt.legend()
+plt.show()
+
+plt.figure()
+plt.plot(t_e[:-1]/s_per_year, dt/s_per_year, 'r')
+plt.xlabel(r'$t$ [an]', fontsize=fs)
+plt.ylabel(r'$\Delta t$ [an]', fontsize=fs)
 plt.show()
