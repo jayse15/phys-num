@@ -46,6 +46,8 @@ rJ     = parameters['rJ']
 a     = parameters['a']
 nsel_physics = parameters['nsel_physics']
 
+GM=6.674e-11
+
 if(nsel_physics==1):
     xS = 0
 else:
@@ -53,6 +55,7 @@ else:
     xJ = a*mS/(mS+mJ)
 
 traj = True # Set to true if we want to generate trajectories
+adapt_traj = True # Set to true to have adaptive trajectories
 
 nsteps = np.array([30e3, 50e3, 60e3, 70e3, 100e3, 200e3, 300e3])
 epsilon = np.array([0.001, 0.01, 0.02, 0.05, 0.1, 0.5, 1])
@@ -94,6 +97,7 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     convergence_list_y_n.append(yy)
     error_n.append(np.abs(En - data[0, 5])) # We use energy since it is the only known quantity at the end
 
+
     datas_n.append(data)
 
 error_e=[]
@@ -110,6 +114,7 @@ for i in range(esimul):  # Iterate through the results of all simulations
     convergence_list_y_e.append(yy)
     error_e.append(np.abs(En - data[0, 5])) # We use energy since it is the only known quantity at the end
     jsteps.append(len(data))
+    dt = np.diff(t)
     datas_e.append(data)
 
 
@@ -124,9 +129,14 @@ if traj == True :
     vmin=[]
     vmax=[]
 
-    param_list=epsilon #change for tolerance
-    datas=datas_e #change for tolerance
-    p=r'\epsilon' #change for tolerance
+    if adapt_traj:
+        param_list=epsilon
+        datas=datas_e
+        p=r'\epsilon'
+    else :
+        param_list=nsteps
+        datas=datas_n
+        p=r'N_{\mathrm{steps}}'
 
     for i in range(nsimul):
         label = f'{param_list[i]:.2e}'
@@ -214,5 +224,3 @@ plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
 plt.ylabel(r"$\Delta E_{\mathrm{mec}}$ [J/kg]", fontsize=fs)
 plt.legend()
 plt.show()
-
-print(jsteps)
