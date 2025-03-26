@@ -54,8 +54,8 @@ else:
 
 traj = True # Set to true if we want to generate trajectories
 
-nsteps = np.array([10e3, 20e3, 30e3, 50e3, 60e3, 70e3, 100e3])
-epsilon = np.array([1e5, 1e6, 5e6, 1e7, 1e8, 1e9, 1e10])
+nsteps = np.array([30e3, 50e3, 60e3, 70e3, 100e3, 200e3, 300e3])
+epsilon = np.array([0.001, 0.01, 0.02, 0.05, 0.1, 0.5, 1])
 
 # Simulations
 output_e = []
@@ -124,9 +124,9 @@ if traj == True :
     vmin=[]
     vmax=[]
 
-    param_list=nsteps #change for tolerance
-    datas=datas_n #change for tolerance
-    p=r'N_{\mathrm{steps}}' #change for tolerance
+    param_list=epsilon #change for tolerance
+    datas=datas_e #change for tolerance
+    p=r'\epsilon' #change for tolerance
 
     for i in range(nsimul):
         label = f'{param_list[i]:.2e}'
