@@ -54,8 +54,9 @@ GM=6.674e-11
 L0= abs(2*a*vy0)
 E0 = 0.5*(vx0**2 + vy0**2) + GM*mS/(2*a)
 sqrt_term = np.sqrt(GM**2 * mS**2 + 2*E0*L0**2)
-rmin_true = (GM*mS - sqrt_term)/(2*E0)
-rmax_true = (GM*mS + sqrt_term)/(2*E0)
+print(sqrt_term)
+rmin_true = np.abs((GM*mS - sqrt_term)/(2*E0))
+rmax_true = np.abs((GM*mS + sqrt_term)/(2*E0))
 vmin_true = L0/rmax_true
 vmax_true = L0/vmin_true
 
