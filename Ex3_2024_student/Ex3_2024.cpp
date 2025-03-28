@@ -178,6 +178,7 @@ public:
           } else {
             while (d>tol){
               dt *= 0.9*pow(tol/d, 1.0/(norder+1.0));
+              dt = min(dt, tFin-t);
               y1 = RK4_do_onestep(x, dt);
               y2 = RK4_do_onestep(RK4_do_onestep(x, dt/2.0), dt/2.0);
               d = abs(y1-y2).max();
@@ -185,9 +186,13 @@ public:
             t+=dt;
           }
           x = y2;
+
+
+
       }
       printOut(true);
     }
+    printOut(true);
   };
 
 };
