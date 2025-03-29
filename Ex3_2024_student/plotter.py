@@ -1,15 +1,15 @@
+
 import numpy as np
 import subprocess
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import pdb
 import os
+from scipy.stats import linregress
 
 plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 150,                 # DPI for displaying figures
+    'figure.dpi': 300,                 # DPI for displaying figures
 })
 
 # Parameters
@@ -54,9 +54,8 @@ GM=6.674e-11
 L0= abs(2*a*vy0)
 E0 = 0.5*(vx0**2 + vy0**2) + GM*mS/(2*a)
 sqrt_term = np.sqrt(GM**2 * mS**2 + 2*E0*L0**2)
-print(sqrt_term)
-rmin_true = np.abs((GM*mS - sqrt_term)/(2*E0))
-rmax_true = np.abs((GM*mS + sqrt_term)/(2*E0))
+rmin_true = (GM*mS - sqrt_term)/(2*E0)
+rmax_true = (GM*mS + sqrt_term)/(2*E0)
 vmin_true = L0/rmax_true
 vmax_true = L0/vmin_true
 
@@ -72,12 +71,29 @@ def Rprim_to_R(x, y, t):
     y_new = x*np.sin(Om*t) + y*np.cos(Om*t)
     return x_new, y_new
 
+def to_latex_sci(num, precision=2):
+    if num == 0:
+        return r'$0$'
+
+    sign = '-' if num < 0 else ''
+    num = abs(num)
+
+    exponent = int(np.floor(np.log10(num)))
+    mantissa = num / 10**exponent
+
+    if round(mantissa, precision)==1 :
+        return rf"10^{{{exponent}}}"
+
+    return rf'{sign}{mantissa:.{precision}f}\cdot 10^{{{exponent}}}'
+
+
+
 traj = True # Set to true if we want to generate trajectories
 adapt_traj = True # Set to true to have adaptive trajectories
 inertial_traj = True # Set to true for traj in inertial frame for jup
 
-nsteps = np.array([20e3, 30e3, 50e3, 60e3, 80e3, 100e3, 150e3, 200e3, 250e3, 300e3])
-epsilon = np.geomspace(1e-3, 1e6, num=10)
+nsteps = np.array([15e3, 20e3, 30e3, 40e3, 50e3, 60e3, 70e3, 80e3, 100e3, 200e3, 300e3])
+epsilon = np.array([1e-3, 1e-2, 1e-1, 10, 100, 1e3, 1e4, 1e5, 2e5, 5e5])
 
 # Simulations
 output_e = []
@@ -86,6 +102,7 @@ convergence_list_x_n, convergence_list_y_n = [], []
 convergence_list_x_e, convergence_list_y_e = [], []
 nsimul = len(nsteps)  # Number of simulations to perform
 esimul = len(epsilon)
+param_list=[]
 
 for i in range(nsimul):
     output_file = f"data/nsteps={nsteps[i]}.out"
@@ -169,12 +186,22 @@ if traj == True :
     i=0
     if adapt_traj: i=0
     else : i=-1
-    x, y, E, t = datas[i][:, 3], datas[i][:, 4], datas[i][:, 5], datas[i][:, 0]
+    x, y, E, t = [datas[0][:, 3],
+                  datas[-1][:,3]], [datas[0][:, 4],
+                                    datas[-1][:,4]], [datas[0][:, 5],
+                                                      datas[-1][:,5]], [datas[0][:, 0],
+                                                                        datas[-1][:,0]]
     coord = ''
     if nsel_physics==2 : coord+="'"
 
     plt.figure()
-    plt.plot(x, y, 'purple', label = rf"${p}={param_list[i]}$")
+    plt.plot(x[0], y[0], 'purple', label = rf"${p}={to_latex_sci(param_list[0], 1)}$")
+    plt.plot(x[1], y[1], 'green', label = rf"${p}={to_latex_sci(param_list[-1], 1)}$")
+    plt.plot(0, xS, 'ro', ms=2, label='Soleil')
+
+    if nsel_physics==2 :
+        plt.plot(0, xJ, 'o', c='orange', ms=1, label='Jupiter')
+
     plt.gca().set_aspect('equal', adjustable='box')
     plt.xlabel(rf"$x{coord}$ [m]", fontsize=fs)
     plt.ylabel(rf"$y{coord}$ [m]", fontsize=fs)
@@ -182,14 +209,14 @@ if traj == True :
     plt.show()
 
     if inertial_traj:
-        x, y = Rprim_to_R(x, y, t)
-        xS, yS = Rprim_to_R(xS, 0, t)
-        xJ, yJ = Rprim_to_R(xJ, 0, t)
+        x, y = Rprim_to_R(x[i], y[i], t[i])
+        xS, yS = Rprim_to_R(xS, 0, t[i])
+        xJ, yJ = Rprim_to_R(xJ, 0, t[i])
 
         plt.figure()
         plt.plot(xS, yS, 'r', label='Soleil')
         plt.plot(xJ, yJ, 'orange', label='Jupiter')
-        plt.plot(x, y, 'purple', label = rf"${p}={param_list[i]}$")
+        plt.plot(x, y, 'purple', label = rf"${p}={to_latex_sci(param_list[i], 1)}$")
         plt.gca().set_aspect('equal', adjustable='box')
         plt.xlabel(rf"$x$ [m]", fontsize=fs)
         plt.ylabel(rf"$y$ [m]", fontsize=fs)
@@ -198,7 +225,8 @@ if traj == True :
 
 
     plt.figure()
-    plt.plot(t/s_per_year, E, label = rf"${p}={param_list[i]}$")
+    plt.plot(t[0]/s_per_year, E[0], 'purple', label = rf"${p}={to_latex_sci(param_list[0], 1)}$")
+    plt.plot(t[1]/s_per_year, E[1], 'green', label = rf"${p}={to_latex_sci(param_list[-1], 1)}$")
     plt.xlabel(r't [an]', fontsize=fs)
     plt.ylabel(r'$E_{mec}$ [J]', fontsize=fs)
     plt.legend()
@@ -238,15 +266,16 @@ if traj == True :
         plt.show()
 
 
+jsteps = np.array(jsteps)
 
 plt.figure()
-plt.plot(1/np.array(jsteps)**4, convergence_list_x_e, 'r+-')
+plt.plot(1/jsteps**4, convergence_list_x_e, 'r+-')
 plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
 plt.ylabel(r"$x_f$ [m]", fontsize=fs)
 plt.show()
 
 plt.figure()
-plt.plot(1/np.array(jsteps)**4, convergence_list_y_e, 'r+-')
+plt.plot(1/jsteps**4, convergence_list_y_e, 'r+-')
 plt.xlabel(r"$1/N_{\mathrm{steps}}^4$", fontsize=fs)
 plt.ylabel(r"$y_f$ [m]", fontsize=fs)
 plt.show()
@@ -264,17 +293,27 @@ plt.ylabel(r"$y_f$ [m]", fontsize=fs)
 plt.show()
 
 plt.figure()
-plt.loglog(nsteps, error_n, 'b+-', label='Schéma fixe')
-plt.loglog(jsteps, error_e, 'r+-', label='Schéma adaptif')
+
+# Perform linear regression for convergence order
+slope, intercept, r_value, p_value, std_err = linregress(np.log(nsteps), np.log(error_n))
+y_fit = np.exp(intercept) * nsteps**slope
+plt.loglog(nsteps, y_fit, c='b', ls='-', label=rf"$y = {to_latex_sci(np.exp(intercept),3)}/N^{{({-slope:.3f}\pm{std_err:.3f})}}_{{steps}}$", linewidth=lw)
+
+slope, intercept, r_value, p_value, std_err = linregress(np.log(jsteps), np.log(error_e))
+y_fit = np.exp(intercept) * jsteps**slope
+plt.loglog(jsteps, y_fit, c='r', ls='-', label=rf"$y ={to_latex_sci(np.exp(intercept),3)}/N_{{steps}}^{{({-slope:.2f}\pm{std_err:.2f})}}$", linewidth=lw)
+
+plt.loglog(nsteps, error_n, 'b+', label='Schéma fixe')
+plt.loglog(jsteps, error_e, 'r+', label='Schéma adaptif')
 plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
 plt.ylabel(r"$\Delta E_{\mathrm{mec}}$ [J/kg]", fontsize=fs)
-plt.legend()
+plt.legend(loc='upper left')
 plt.show()
 
 dt = np.diff(datas_e[-1][:, 0])
 t_e = datas_e[-1][:, 0]
 plt.figure()
-plt.plot(t_e[:-1]/s_per_year, dt/s_per_year, 'r')
+plt.plot(t_e[:-1]/s_per_year, dt/s_per_year, 'g')
 plt.xlabel(r'$t$ [an]', fontsize=fs)
 plt.ylabel(r'$\Delta t$ [an]', fontsize=fs)
 plt.show()
