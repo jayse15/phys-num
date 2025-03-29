@@ -9,7 +9,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 300,                 # DPI for displaying figures
+    'figure.dpi': 150,                 # DPI for displaying figures
 })
 
 # Parameters
@@ -53,7 +53,7 @@ GM=6.674e-11
 
 L0= abs(2*a*vy0)
 E0 = 0.5*(vx0**2 + vy0**2) + GM*mS/(2*a)
-sqrt_term = np.sqrt(GM**2 * mS**2 + 2*E0*L0**2)
+sqrt_term = np.sqrt(GM**2 * mS**2 + 2*E0*(L0**2))
 rmin_true = (GM*mS - sqrt_term)/(2*E0)
 rmax_true = (GM*mS + sqrt_term)/(2*E0)
 vmin_true = L0/rmax_true
@@ -89,8 +89,8 @@ def to_latex_sci(num, precision=2):
 
 
 traj = True # Set to true if we want to generate trajectories
-adapt_traj = True # Set to true to have adaptive trajectories
-inertial_traj = True # Set to true for traj in inertial frame for jup
+adapt_traj = False # Set to true to have adaptive trajectories
+inertial_traj = False # Set to true for traj in inertial frame for jup
 
 nsteps = np.array([15e3, 20e3, 30e3, 40e3, 50e3, 60e3, 70e3, 80e3, 100e3, 200e3, 300e3])
 epsilon = np.array([1e-3, 1e-2, 1e-1, 10, 100, 1e3, 1e4, 1e5, 2e5, 5e5])
@@ -125,8 +125,8 @@ datas_n=[]
 t_n=[]
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output_n[i])  # Load the output file of the i-th simulation
+    
     t_n = data[:, 0]
-
     xx = data[-1, 3]
     yy = data[-1, 4]
     En = data[-1, 5]
@@ -157,10 +157,14 @@ lw = 1.5
 fs = 16
 if traj == True :
 
-    rmin=[]
-    rmax=[]
-    vmin=[]
-    vmax=[]
+    rmin = []
+    rmax = []
+    vmin = []
+    vmax = []
+    L_1 = []
+    L_2 = []
+    E_1 = []
+    E_2 = []
 
     if adapt_traj:
         param_list=epsilon
@@ -175,13 +179,48 @@ if traj == True :
 
     for i in range(n):
 
-        v = np.sqrt(datas[i][:, 1]**2 + datas[i][:, 2]**2)
-        r = np.sqrt(datas[i][:, 3]**2 + datas[i][:, 4]**2)
+        v = datas[i][:, 2]
+        r = datas[i][:, 3]
+        #v = np.sqrt(datas[i][:, 1]**2 + datas[i][:, 2]**2)
+        #r = np.sqrt(datas[i][:, 3]**2 + datas[i][:, 4]**2)
 
         rmin.append(r.min())
         rmax.append(r.max())
         vmin.append(v.min())
         vmax.append(v.max())
+        L_1.append(r.min()*v.max())
+        L_2.append(r.max()*v.min())
+        E_1.append(np.abs(0.5*v.max()**2+GM*mS/r.min()))
+        E_2.append(np.abs(0.5*v.min()**2+GM*mS/r.max()))
+
+
+    plt.figure()
+    plt.plot(nsteps, rmin, 'o', c='green', label = rf"rmin_num")
+    plt.axhline(y=rmin_true, color = 'red', label = rf"rmin_true")
+    plt.legend()
+    plt.figure()
+    plt.plot(nsteps, rmax,'o', c='green', label = rf"rmax_num")
+    plt.axhline(y=rmax_true, color = 'red', label = "rmax_true")
+    plt.legend()
+    plt.figure()
+    plt.plot(nsteps, vmin, 'o', c='green', label = rf"vmin_num")
+    plt.axhline(y=vmin_true, color = 'red', label = rf"vmin_true")
+    plt.legend()
+    plt.figure()
+    plt.plot(nsteps, vmax, 'o', c='green', label = rf"vmax_num")
+    plt.axhline(y=vmax_true, color = 'red', label = rf"vmax_true")
+    plt.legend()
+    plt.figure()
+    plt.plot(nsteps, L_1, 'o', c = 'green', label = rf"L_1")
+    plt.plot(nsteps, L_2, 'o', c = 'blue', label = rf"L_2")
+    plt.axhline(y=L0, color = 'red', label = rf"L_0")
+    plt.legend()
+    plt.figure()
+    plt.plot(nsteps, E_1, 'o', c = 'green', label = rf"E_1")
+    plt.plot(nsteps, E_2, 'o', c = 'blue', label = rf"E_2")
+    plt.axhline(y=E0, color = 'red', label = rf"E_0")
+    plt.legend()
+
 
     i=0
     if adapt_traj: i=0
