@@ -258,7 +258,7 @@ if traj == True :
         plt.loglog(jsteps, np.abs(rmax_e-rmax_true)/rmax_true, 'r+-', label=r'$\varepsilon_{r_{\mathrm{max}}}$')
         plt.loglog(jsteps, np.abs(vmin_e-vmin_true)/vmin_true, 'g+-', label=r'$\varepsilon_{v_{\mathrm{min}}}$')
         plt.loglog(jsteps, np.abs(vmax_e-vmax_true)/vmax_true, '+-', c='orange', label=r'$\varepsilon_{v_{\mathrm{max}}}$')
-        plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
+        plt.xlabel(r"$\epsilon$", fontsize=fs)
         plt.ylabel(r"$\varepsilon_{\mathrm{rel}}$", fontsize=fs)
         plt.legend()
         plt.show()
