@@ -1,3 +1,4 @@
+
 import numpy as np
 import subprocess
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 300,                 # DPI for displaying figures
+    'figure.dpi': 150,                 # DPI for displaying figures
 })
 
 # Parameters
@@ -134,8 +135,8 @@ vmax_e=[]
 
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output_n[i])  # Load the output file of the i-th simulation
-    t_n = data[:, 0]
 
+    t_n = data[:, 0]
     xx = data[-1, 3]
     yy = data[-1, 4]
     En = data[-1, 5]

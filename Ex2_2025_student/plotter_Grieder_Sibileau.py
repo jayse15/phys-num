@@ -76,9 +76,9 @@ traj=False
 # Set to true for corresponding question, e.g A=True for question a)
 A = False
 B = False
-C = False
+C = True
 D = False
-E = True
+E = False
 
 # Simulations
 output = []
