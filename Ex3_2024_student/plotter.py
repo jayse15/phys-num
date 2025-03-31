@@ -50,13 +50,13 @@ vy0 = parameters['vy0']
 s_per_year = 3.1536e7
 GM=6.674e-11
 
-L0= abs(2*a*vy0)
-E0 = 0.5*(vx0**2 + vy0**2) + GM*mS/(2*a)
-sqrt_term = np.sqrt(GM**2 * mS**2 + 2*E0*L0**2)
-rmin_true = (GM*mS - sqrt_term)/(2*E0)
-rmax_true = (GM*mS + sqrt_term)/(2*E0)
+L0= 2*a*vy0
+E0 = 0.5*(vx0**2 + vy0**2) - GM*mS/(2*a)
+sqrt_term = np.sqrt((GM*mS)**2 + 2*E0*L0**2)
+rmin_true = (-GM*mS + sqrt_term)/(2*E0)
+rmax_true = (-GM*mS - sqrt_term)/(2*E0)
 vmin_true = L0/rmax_true
-vmax_true = L0/vmin_true
+vmax_true = L0/rmin_true
 
 if(nsel_physics==1):
     xS = 0
@@ -89,10 +89,10 @@ def to_latex_sci(num, precision=2):
 
 traj = True # Set to true if we want to generate trajectories
 adapt_traj = True # Set to true to have adaptive trajectories
-inertial_traj = True # Set to true for traj in inertial frame for jup
+inertial_traj = False # Set to true for traj in inertial frame for jup
 
-nsteps = np.array([15e3, 20e3, 30e3, 40e3, 50e3, 60e3, 70e3, 80e3, 100e3, 200e3, 300e3])
-epsilon = np.array([1e-3, 1e-2, 1e-1, 10, 100, 1e3, 1e4, 1e5, 2e5, 5e5])
+nsteps = np.array([ 30e3, 40e3, 50e3, 60e3, 70e3, 80e3, 100e3, 200e3, 300e3])
+epsilon = np.array([1e-3, 1e-2, 1e-1, 10, 100, 1e3, 1e4, 1e5])
 
 # Simulations
 output_e = []
@@ -122,6 +122,16 @@ for i in range(esimul):
 error_n=[]
 datas_n=[]
 t_n=[]
+
+rmin_n=[]
+rmax_n=[]
+vmin_n=[]
+vmax_n=[]
+rmin_e=[]
+rmax_e=[]
+vmin_e=[]
+vmax_e=[]
+
 for i in range(nsimul):  # Iterate through the results of all simulations
     data = np.loadtxt(output_n[i])  # Load the output file of the i-th simulation
     t_n = data[:, 0]
@@ -132,6 +142,13 @@ for i in range(nsimul):  # Iterate through the results of all simulations
     convergence_list_x_n.append(xx)
     convergence_list_y_n.append(yy)
     error_n.append(np.abs(En - data[0, 5])) # We use energy since it is the only known quantity at the end
+    v = np.sqrt(data[:, 1]**2 + data[:, 2]**2)
+    r = np.sqrt(data[:, 3]**2 + data[:, 4]**2)
+
+    rmin_n.append(r.min())
+    rmax_n.append(r.max())
+    vmin_n.append(v.min())
+    vmax_n.append(v.max())
 
 
     datas_n.append(data)
@@ -148,6 +165,14 @@ for i in range(esimul):  # Iterate through the results of all simulations
     convergence_list_x_e.append(xx)
     convergence_list_y_e.append(yy)
     error_e.append(np.abs(En - data[0, 5])) # We use energy since it is the only known quantity at the end
+    v = np.sqrt(data[:, 1]**2 + data[:, 2]**2)
+    r = np.sqrt(data[:, 3]**2 + data[:, 4]**2)
+
+    rmin_e.append(r.min())
+    rmax_e.append(r.max())
+    vmin_e.append(v.min())
+    vmax_e.append(v.max())
+
     jsteps.append(len(data))
     datas_e.append(data)
 
@@ -155,11 +180,6 @@ for i in range(esimul):  # Iterate through the results of all simulations
 lw = 1.5
 fs = 16
 if traj == True :
-
-    rmin=[]
-    rmax=[]
-    vmin=[]
-    vmax=[]
 
     if adapt_traj:
         param_list=epsilon
@@ -171,16 +191,6 @@ if traj == True :
         datas=datas_n
         p=r'N_{\mathrm{steps}}'
         n=nsimul
-
-    for i in range(n):
-
-        v = np.sqrt(datas[i][:, 1]**2 + datas[i][:, 2]**2)
-        r = np.sqrt(datas[i][:, 3]**2 + datas[i][:, 4]**2)
-
-        rmin.append(r.min())
-        rmax.append(r.max())
-        vmin.append(v.min())
-        vmax.append(v.max())
 
     i=0
     if adapt_traj: i=0
@@ -233,34 +243,22 @@ if traj == True :
 
     if nsel_physics==1:
         plt.figure()
-        plt.plot(param_list, rmin, 'k+-', label=r'$r_{\mathrm{min}}$')
-        plt.xlabel(rf"${p}$", fontsize=fs)
-        plt.ylabel(r"$r$ [m]", fontsize=fs)
-        plt.hlines(y=rmin_true, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$r_{\mathrm{min, true}}$')
+        plt.loglog(nsteps, np.abs(rmin_n-rmin_true)/rmin_true, 'b+-', label=r'$\varepsilon_{r_{\mathrm{min}}}$')
+        plt.loglog(nsteps, np.abs(rmax_n-rmax_true)/rmax_true, 'r+-', label=r'$\varepsilon_{r_{\mathrm{max}}}$')
+        plt.loglog(nsteps, np.abs(vmin_n-vmin_true)/vmin_true, 'g+-', label=r'$\varepsilon_{v_{\mathrm{min}}}$')
+        plt.loglog(nsteps, np.abs(vmax_n-vmax_true)/vmax_true, '+-', c='orange', label=r'$\varepsilon_{v_{\mathrm{max}}}$')
+        plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
+        plt.ylabel(r"$\varepsilon_{\mathrm{rel}}$", fontsize=fs)
         plt.legend()
         plt.show()
 
         plt.figure()
-        plt.plot(param_list, rmax, 'k+-', label=r'$r_{\mathrm{max}}$')
-        plt.xlabel(rf"${p}$", fontsize=fs)
-        plt.ylabel(r"$r$ [m]", fontsize=fs)
-        plt.hlines(y=rmax_true, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$r_{\mathrm{max, true}}$')
-        plt.legend()
-        plt.show()
-
-        plt.figure()
-        plt.plot(param_list, vmin, 'k+-', label=r'$v_{\mathrm{min}}$')
-        plt.xlabel(rf"${p}$", fontsize=fs)
-        plt.ylabel(r"$v$ [m/s]", fontsize=fs)
-        plt.hlines(y=vmin_true, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$v_{\mathrm{min, true}}$')
-        plt.legend()
-        plt.show()
-
-        plt.figure()
-        plt.plot(param_list, vmax, 'k+-', label=r'$v_{\mathrm{max}}$')
-        plt.xlabel(rf"${p}$", fontsize=fs)
-        plt.ylabel(r"$v$ [m/s]", fontsize=fs)
-        plt.hlines(y=vmax_true, xmin=param_list[0], xmax=param_list[-1], colors='r', label=r'$v_{\mathrm{max, true}}$')
+        plt.loglog(jsteps, np.abs(rmin_e-rmin_true)/rmin_true, 'b+-', label=r'$\varepsilon_{r_{\mathrm{min}}}$')
+        plt.loglog(jsteps, np.abs(rmax_e-rmax_true)/rmax_true, 'r+-', label=r'$\varepsilon_{r_{\mathrm{max}}}$')
+        plt.loglog(jsteps, np.abs(vmin_e-vmin_true)/vmin_true, 'g+-', label=r'$\varepsilon_{v_{\mathrm{min}}}$')
+        plt.loglog(jsteps, np.abs(vmax_e-vmax_true)/vmax_true, '+-', c='orange', label=r'$\varepsilon_{v_{\mathrm{max}}}$')
+        plt.xlabel(r"$N_{\mathrm{steps}}$", fontsize=fs)
+        plt.ylabel(r"$\varepsilon_{\mathrm{rel}}$", fontsize=fs)
         plt.legend()
         plt.show()
 
