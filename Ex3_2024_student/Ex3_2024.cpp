@@ -17,10 +17,10 @@ private:
   double GM=6.674e-11;
   double mS, mJ, xS, xJ;
   int nsteps;
-  int sampling;
+  int sampling= 1;
   int last;
   int  nsel_physics;
-  int norder;
+  int norder= 4;
   bool adapt;
   double tol= 0e0;
   valarray<double> x0 = std::valarray<double>(0.e0, 4); // Correctly initialized
@@ -33,7 +33,7 @@ private:
     {
       double Energy = compute_energy(x);
       *outputFile << t << " "<< x[0] << " " << x[1] << " "<< x[2] << " " << x[3] << " " \
-      << Energy<< " "<< nsteps << endl; // write output on file
+      << Energy<< " "<< endl; // write output on file
       last = 1;
     }
     else
@@ -97,6 +97,7 @@ void initial_condition(void){
     xJ = a*mS/(mS+mJ);
     Om = sqrt(GM*mS/(pow(a, 2)*xJ));
     x0[1] -= Om*x0[2]; // Speed in inertial reference must be given
+    x0[0] += Om*x0[3];
   }
 }
 
@@ -135,9 +136,7 @@ public:
     nsel_physics = configFile.get<int>("nsel_physics");       //1) one body problem around mass#2 or 2) one body in rotating reference frame of {1,2}
     adapt        = configFile.get<bool>("adapt");             //if 1=true -> adaptive dt, if 0=false -> fixed dt
     tol          = configFile.get<double>("tol");             //tolerance of the adaptive scheme
-    sampling     = configFile.get<int>("sampling");     // number of time steps between two writings on file
     nsteps       = configFile.get<int>("nsteps");        // number of time step per period
-    norder       = configFile.get<int>("norder");        // convergence order
 
 
     // Ouverture du fichier de sortie
