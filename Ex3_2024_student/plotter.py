@@ -206,10 +206,10 @@ if traj == True :
     plt.figure()
     plt.plot(x[0], y[0], 'purple', label = rf"${p}={to_latex_sci(param_list[0], 1)}$")
     plt.plot(x[1], y[1], 'green', label = rf"${p}={to_latex_sci(param_list[-1], 1)}$")
-    plt.plot(0, xS, 'ro', ms=2, label='Soleil')
+    plt.plot(xS, 0, 'ro', ms=2, label='Soleil')
 
     if nsel_physics==2 :
-        plt.plot(0, xJ, 'o', c='orange', ms=1, label='Jupiter')
+        plt.plot(xJ, 0, 'o', c='orange', ms=1, label='Jupiter')
 
     plt.gca().set_aspect('equal', adjustable='box')
     plt.xlabel(rf"$x{coord}$ [m]", fontsize=fs)
