@@ -38,22 +38,28 @@ solve(const vector<T>& diag,
     return solution;
 }
 
-//TODO build the epsilon function
-double epsilon()
+
+double epsilon(double r, double r1, double R)
 {
-    return 0.0;
+    if ((0<=r) and (r<r1)){
+      return 1;
+    } else if ((r1<=r) and (r<=R)){
+      return 4;
+    }
+    return 0;
 }
 
-//TODO build the rho_epsilon function (rho_lib / epsilon_0)
-double rho_epsilon()
+double rho_epsilon(double rh0, double r, double r1, double R)
 {
-    return 0.0;
+    if ((0<=r) and (r<r1)){
+      return rh0*sin(PI*r/r1);
+    }
+    return 0;
 }
 
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    
+
 
     // USAGE: Exercise4 [configuration-file] [<settings-to-overwrite> ...]
 
@@ -80,18 +86,18 @@ main(int argc, char* argv[])
 
     // For the analytical comparison
     const bool uniform_rho_case = configFile.get<bool>("uniform_rho_case");
-        
+
     // Dielectric relative permittivity
     const double epsilon_a = configFile.get<double>("epsilon_a");
     const double epsilon_b = configFile.get<double>("epsilon_b");
-    
+
     // Boundary conditions
     const double VR = configFile.get<double>("VR");
-    
+
     // Discretization
     const int N1 = configFile.get<int>("N1");
     const int N2 = configFile.get<int>("N2");
-    
+
     // Fichiers de sortie:
     string fichier = configFile.get<string>("output");
     string fichier_phi = fichier+"_phi.out";
@@ -106,31 +112,57 @@ main(int argc, char* argv[])
     // Position of elements
     vector<double> r(pointCount);
 
-    //TODO build the nodes vector r
-    
+    for (int i=0; i<r.size(); i++){
+      if (i<N1){
+        r[i] = i*h1;
+      } else {
+        r[i] = N1*h1 + (i-N1)*h2;
+      }
+    }
+
     // Arrays initialization
     vector<double> h(pointCount-1); 	// Distance between grid points
     vector<double> midPoint(pointCount-1);  // Midpoint of each grid element
-        
-    // TODO build the h vector and midpoint vector
+
+    for (int i=0; i<h.size(); i++){
+      if (i<N1){
+        h[i] = h1;
+      } else {
+        h[i] = h2;
+      }
+    }
+
+    for (int i=0; i<midPoint.size(); i++){
+      if (i<N1){
+        midPoint[i] = r[i] + h1/2;
+      } else {
+        midPoint[i] = r[i] + h2/2;
+      }
+    }
 
     // Construct the matrix and right-hand side
     vector<double> diagonal(pointCount, 1.0);  // Diagonal
     vector<double> lower(pointCount - 1, 0.0); // Lower diagonal
     vector<double> upper(pointCount - 1, 0.0); // Upper diagonal
     vector<double> rhs(pointCount, 0.0);       // Right-hand-side
-    
-    // Loop over the intervals: add the contributions to matrix and rhs   
+
+    // Loop over the intervals: add the contributions to matrix and rhs
     for (int k = 0; k < pointCount-1; ++k) {
-        
-                   
-        // TODO build the vectors diagonal, lower, upper, rhs
-    }    
+      double integral = epsilon(midPoint[k], r1, R)*midPoint[k];
+      diagonal[k] += integral/h[k];
+      lower[k] -= integral/h[k];
+      upper[k] -= integral/h[k];
+      diagonal[k+1] += integral/h[k];
+
+      rhs[k] += rho_epsilon(rho0, midPoint[k], r1, R)*0.5*midPoint[k]*h[k];
+      rhs[k+1] += rho_epsilon(rho0, midPoint[k], r1, R)*0.5*midPoint[k]*h[k];
+      }
+
 
     // TODO boundary condition at r=R (modify the lines below)
-    lower[lower.size() - 1]       = 0.0;
+    lower[lower.size() - 1] = 0.0;
     diagonal[diagonal.size() - 1] = 1.0;
-    rhs[rhs.size() - 1] = 0.0;
+    rhs[rhs.size() - 1] = VR;
 
 
     // Solve the system of equations
@@ -142,7 +174,7 @@ main(int argc, char* argv[])
     for (int i = 0; i < E.size(); ++i) {
         // TODO calculate E and D
         E[i] = 0.0;
-        D[i] = 0.0; 
+        D[i] = 0.0;
     }
 
     // Export data
@@ -189,4 +221,3 @@ main(int argc, char* argv[])
 
     return 0;
 }
-
