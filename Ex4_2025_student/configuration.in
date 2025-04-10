@@ -1,14 +1,11 @@
-% Physique:
 R=0.05
 r1=0.015
 epsilon_a = 1
-!epsilon_b = 4
-epsilon_b = 1
+epsilon_b = 4
 uniform_rho_case = false
 VR = 0
 rho0=1e4
-N1=3
-N2=3
-output=output.out
-% Set to 0 to reduce printouts
-verbose=1 
+N1=100
+N2=75
+output=outs
+verbose=1 // Set to 0 to reduce printouts

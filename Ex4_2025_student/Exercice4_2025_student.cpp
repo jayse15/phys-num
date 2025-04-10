@@ -10,6 +10,7 @@
 using namespace std;
 
 const double PI=3.1415926535897932384626433832795028841971e0;
+
 // Résolution d'un système d'équations linéaires par élimination de
 // Gauss-Jordan:
 template<class T>
@@ -39,18 +40,21 @@ solve(const vector<T>& diag,
 }
 
 
-double epsilon(double r, double r1, double R)
+double epsilon(double r, double r1, double R, double eA, double eB)
 {
     if ((0<=r) and (r<r1)){
-      return 1;
+      return eA;
     } else if ((r1<=r) and (r<=R)){
-      return 4;
+      return eB;
     }
     return 0;
 }
 
-double rho_epsilon(double rh0, double r, double r1, double R)
+double rho_epsilon(double rh0, double r, double r1, double R, bool unif)
 {
+    if (unif){
+      return 1;
+    }
     if ((0<=r) and (r<r1)){
       return rh0*sin(PI*r/r1);
     }
@@ -141,21 +145,21 @@ int main(int argc, char* argv[])
     }
 
     // Construct the matrix and right-hand side
-    vector<double> diagonal(pointCount, 1.0);  // Diagonal
+    vector<double> diagonal(pointCount, 0.0);  // Diagonal
     vector<double> lower(pointCount - 1, 0.0); // Lower diagonal
     vector<double> upper(pointCount - 1, 0.0); // Upper diagonal
     vector<double> rhs(pointCount, 0.0);       // Right-hand-side
 
     // Loop over the intervals: add the contributions to matrix and rhs
     for (int k = 0; k < pointCount-1; ++k) {
-      double integral = epsilon(midPoint[k], r1, R)*midPoint[k];
+      double integral = epsilon(midPoint[k], r1, R, epsilon_a, epsilon_b)*midPoint[k];
       diagonal[k] += integral/h[k];
       lower[k] -= integral/h[k];
       upper[k] -= integral/h[k];
       diagonal[k+1] += integral/h[k];
 
-      rhs[k] += rho_epsilon(rho0, midPoint[k], r1, R)*0.5*midPoint[k]*h[k];
-      rhs[k+1] += rho_epsilon(rho0, midPoint[k], r1, R)*0.5*midPoint[k]*h[k];
+      rhs[k] += rho_epsilon(rho0, midPoint[k], r1, R, uniform_rho_case)*0.5*midPoint[k]*h[k];
+      rhs[k+1] += rho_epsilon(rho0, midPoint[k], r1, R, uniform_rho_case)*0.5*midPoint[k]*h[k];
       }
 
 
@@ -172,9 +176,8 @@ int main(int argc, char* argv[])
     vector<double> E(pointCount - 1, 0);
     vector<double> D(pointCount - 1, 0);
     for (int i = 0; i < E.size(); ++i) {
-        // TODO calculate E and D
-        E[i] = 0.0;
-        D[i] = 0.0;
+        E[i] = (phi[i]-phi[i+1])/h[i];
+        D[i] = E[i]*epsilon(midPoint[i], r1, R, epsilon_a, epsilon_b);
     }
 
     // Export data
