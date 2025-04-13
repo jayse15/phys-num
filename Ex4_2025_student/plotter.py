@@ -12,7 +12,7 @@ plt.rcParams.update({
     'figure.dpi': 100,                 # DPI for displaying figures
     'font.size': 16,
     'lines.linewidth':2,
-    'lines.markersize':5,
+    'lines.markersize':7,
     'axes.formatter.limits':(-3, 3)
 })
 
@@ -62,6 +62,8 @@ rho0 = parameters['rho0']
 VR = parameters['VR']
 r1 = parameters['r1']
 R = parameters['R']
+e0=8.85418781e-12
+triv = False
 
 def phi_0(r):
     return (R**2-r**2)/4
@@ -69,56 +71,103 @@ def phi_0(r):
 def E_0(r):
     return r/2
 
-N = np.array([5, 6, 8, 10, 15, 20, 30, 40, 50, 60, 70, 100])
-outputs = []
-datas=[]
-nsimul = len(N)
+def rho_true(r):
+    return np.where(r < r1, rho0 * np.sin(np.pi * r / r1), 0)
 
-for i in range(nsimul):
-    output_file = f"data/N={N[i]}"
+N2 = np.array([100])
+nsimul = len(N2)
+datas=[]
+outputs=[]
+for j in range(len(N2)):
+    output_file = f"data/N2={N2[j]}"
     outputs.append(output_file)
-    cmd = f"{repertoire}{executable} {input_filename} N1={N[i]} N2={N[i]} output={output_file}"
+    cmd = f"{repertoire}{executable} {input_filename} N1={2*N2[j]} N2={N2[j]} output={output_file}"
     print(cmd)
     subprocess.run(cmd, shell=True)
     print('Done.')
 
-E, D, Phi = [], [], []
+E, D, Phi, rho = [], [], [], []
 conv_phi = []
-for i in range(nsimul):  # Iterate through the results of all simulations
-    e = np.loadtxt(outputs[i]+'_E.out')  # Load the output file of the i-th simulation
-    d = np.loadtxt(outputs[i]+'_D.out')  # Load the output file of the i-th simulation
-    p = np.loadtxt(outputs[i]+'_phi.out')  # Load the output file of the i-th simulation
+err_phi = []
+traj=False
+for k in range(len(N2)):  # Iterate through the results of all simulations
+    e = np.loadtxt(outputs[k]+'_E.out')
+    d = np.loadtxt(outputs[k]+'_D.out')
+    p = np.loadtxt(outputs[k]+'_phi.out')
+    r = np.loadtxt(outputs[k]+'_rho.out')
     E.append(e)
     D.append(d)
     Phi.append(p)
-    conv_phi.append(p[0, 1])
+    rho.append(r)
+    if triv:
+        err = abs(p[1,0]-phi_0(0))
+        err_phi.append(err)
+    else:
+        pr1 = p[np.abs(p[:, 0] - r1).argmin()][1]
+        conv_phi.append(pr1)
 
-r = E[1][:, 0]
-plt.figure()
-plt.plot(r, E[1][:, 1], 'o',  c='orange', label='Data', markerfacecolor='none')
-plt.plot(r, E_0(r), 'k--', label='True')
-plt.xlabel(r'$r$[m]')
-plt.ylabel(r'$E(r)$ [V/m]')
-plt.legend()
-plt.show()
+    if traj:
+        plt.figure()
+        plt.plot(e[:,0], e[:, 1], '-',  c='orange')
+        #plt.plot(r, E_0(r), 'k--', label='True')
+        plt.xlabel(r'$r$[m]')
+        plt.ylabel(r'$E(r)$ [V/m]')
+        plt.grid(alpha=0.8)
+        plt.show()
 
-plt.figure()
-plt.plot(D[1][:, 0], D[1][:, 1], 'go', markerfacecolor='none')
-plt.xlabel(r'$r$[m]')
-plt.ylabel(r'$D(r)$ [C/m$^2$]')
-plt.show()
+        plt.figure()
+        plt.plot(d[:, 0], d[:, 1], 'g-')
+        plt.xlabel(r'$r$[m]')
+        plt.ylabel(r'$D(r)$ [C/m$^2$]')
+        plt.grid(alpha=0.8)
+        plt.show()
 
-r = Phi[1][:, 0]
-plt.figure()
-plt.plot(r, Phi[1][:, 1], 'ro', label='Data', markerfacecolor='none')
-plt.plot(r, phi_0(r), 'k--', label='True')
-plt.xlabel(r'$r$[m]')
-plt.ylabel(r'$\phi(r)$ [V]')
-plt.legend()
-plt.show()
+        plt.figure()
+        plt.plot(p[:,0], p[:, 1], 'r-')
+        #plt.plot(r, phi_0(r), 'k--', label='True')
+        plt.xlabel(r'$r$[m]')
+        plt.ylabel(r'$\phi(r)$ [V]')
+        plt.grid(alpha=0.8)
+        plt.show()
 
-plt.figure()
-plt.plot((1/N)**2, conv_phi, 'k+-')
-plt.xlabel(r'$1/N^2_1(=1/N^2_2)$')
-plt.ylabel(r'$\phi(0)$ [V]')
-plt.show()
+if triv:
+    # Perform linear regression for convergence order
+    slope, intercept, r_value, p_value, std_err = linregress(np.log(N), np.log(err_phi))
+    y_fit = np.exp(intercept) * N**slope
+
+    plt.figure()
+    plt.loglog(N, y_fit, 'k--', label=rf"$y = {to_latex_sci(np.exp(intercept),4)}/N^{{({-slope:.4f}\pm{std_err:.4f})}}$")
+    plt.loglog(N, err_phi, 'rx')
+    plt.xlabel(r'$N_1(=N_2)$')
+    plt.ylabel(r'$\Delta\phi(r=0)$ [V]')
+    plt.grid(alpha=0.8)
+    plt.legend()
+    plt.show()
+else :
+    plt.plot(rho[0][:, 0], rho[0][:, 1], lw=3, c='purple', label='Data')
+    plt.plot(rho[0][:, 0], rho_true(rho[0][:, 0]), 'g--', label='True')
+    plt.xlabel(r'$r$ [m]')
+    plt.ylabel(r'$\rho_{\mathrm{lib}}/\epsilon_0$ [V/m$^2$]')
+    plt.grid(alpha=0.8)
+    plt.legend()
+    plt.show()
+
+    Q_lib = 2*np.pi*D[0][:, 0]*D[0][:, 1]
+    Q_tot = 2*np.pi*e0*E[0][:, 0]*E[0][:, 1]
+
+    f = rho[0][:, 0] * e0*rho[0][:, 1]
+    dr = rho[0][1:, 0]- rho[0][:-1, 0]  # length N
+    partial = 0.5 * (f[:-1] + f[1:]) * dr
+    integral = np.cumsum(partial)  # length N
+    Q_lib_rho = 2.0 * np.pi * integral
+
+
+    plt.plot(D[0][:, 0], Q_lib, lw=3, label=r'$Q_{\mathrm{lib}}$')
+    plt.plot(E[0][:, 0], Q_tot, label=r'$Q_{\mathrm{tot}}$')
+    plt.plot(rho[0][1:, 0], Q_lib_rho, '--k', label=r'$Q_{\mathrm{lib}}$ avec $\rho_{\mathrm{lib}}$')
+    plt.plot(D[0][:, 0], Q_tot-Q_lib, label=r'$Q_{\mathrm{pol}}$')
+    plt.xlabel(r'$r$ [m]')
+    plt.ylabel(r'$Q$ [C]')
+    plt.legend()
+    plt.grid(alpha=0.8)
+    plt.show()

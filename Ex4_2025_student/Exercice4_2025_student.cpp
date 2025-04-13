@@ -10,6 +10,7 @@
 using namespace std;
 
 const double PI=3.1415926535897932384626433832795028841971e0;
+const double e0=8.85418781e-12;
 
 // Résolution d'un système d'équations linéaires par élimination de
 // Gauss-Jordan:
@@ -64,11 +65,8 @@ double rho_epsilon(double rh0, double r, double r1, double R, bool unif)
 int main(int argc, char* argv[])
 {
 
-
-    // USAGE: Exercise4 [configuration-file] [<settings-to-overwrite> ...]
-
     // Read the default input
-    string inputPath = "configuration.in.example";
+    string inputPath = "configuration.in";
     // Optionally override configuration file.
     if (argc > 1)
         inputPath = argv[1];
@@ -107,6 +105,7 @@ int main(int argc, char* argv[])
     string fichier_phi = fichier+"_phi.out";
     string fichier_E   = fichier+"_E.out";
     string fichier_D   = fichier+"_D.out";
+    string fichier_rho = fichier+"_rho.out";
 
     // Create our finite elements
     const int pointCount = N1 + N2 + 1; // Number of finite elements
@@ -152,18 +151,18 @@ int main(int argc, char* argv[])
 
     // Loop over the intervals: add the contributions to matrix and rhs
     for (int k = 0; k < pointCount-1; ++k) {
-      double integral = epsilon(midPoint[k], r1, R, epsilon_a, epsilon_b)*midPoint[k];
-      diagonal[k] += integral/h[k];
-      lower[k] -= integral/h[k];
-      upper[k] -= integral/h[k];
-      diagonal[k+1] += integral/h[k];
+      double integral = epsilon(midPoint[k], r1, R, epsilon_a, epsilon_b)*midPoint[k]/h[k];
+      diagonal[k] += integral;
+      lower[k] -= integral;
+      upper[k] -= integral;
+      diagonal[k+1] += integral;
 
       rhs[k] += rho_epsilon(rho0, midPoint[k], r1, R, uniform_rho_case)*0.5*midPoint[k]*h[k];
       rhs[k+1] += rho_epsilon(rho0, midPoint[k], r1, R, uniform_rho_case)*0.5*midPoint[k]*h[k];
       }
 
 
-    // TODO boundary condition at r=R (modify the lines below)
+    // boundary condition at r=R (modify the lines below)
     lower[lower.size() - 1] = 0.0;
     diagonal[diagonal.size() - 1] = 1.0;
     rhs[rhs.size() - 1] = VR;
@@ -175,9 +174,13 @@ int main(int argc, char* argv[])
     // Calculate electric field E and displacement vector D
     vector<double> E(pointCount - 1, 0);
     vector<double> D(pointCount - 1, 0);
-    for (int i = 0; i < E.size(); ++i) {
+    vector<double> rho(pointCount - 2, 0);
+    for (int i = 0; i < pointCount - 1; ++i) {
         E[i] = (phi[i]-phi[i+1])/h[i];
-        D[i] = E[i]*epsilon(midPoint[i], r1, R, epsilon_a, epsilon_b);
+        D[i] = E[i]*epsilon(midPoint[i], r1, R, epsilon_a, epsilon_b)*e0;
+    }
+    for (int i = 0; i < pointCount - 2; ++i) {
+      rho[i] = (midPoint[i+1]*D[i+1] - midPoint[i]*D[i])/(midPoint[i+1]-midPoint[i]) /(r[i+1]*e0);
     }
 
     // Export data
@@ -220,6 +223,20 @@ int main(int argc, char* argv[])
         for (int i = 0; i < D.size(); ++i) {
             ofs << midPoint[i] << " " << D[i] << endl;
         }
+    }
+
+    {
+      // Charge density rho/e0
+      ofstream ofs(fichier_rho);
+      ofs.precision(15);
+
+      if (rho.size() != D.size()-1)
+          throw std::runtime_error("error when writing charge density : size of "
+                                   "rho should be 1 less than D");
+
+      for (int i = 0; i < rho.size(); ++i) {
+          ofs << r[i+1] << " " << rho[i] << endl;
+      }
     }
 
     return 0;
