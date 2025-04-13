@@ -144,8 +144,8 @@ if triv:
     plt.legend()
     plt.show()
 else :
-    plt.plot(rho[0][:, 0], rho[0][:, 1], c='purple', label='Data')
-    plt.plot(rho[0][:, 0], rho_true(rho[0][:, 0]), 'r--', label='True', lw=0.5)
+    plt.plot(rho[0][:, 0], rho[0][:, 1], lw=3, c='purple', label='Data')
+    plt.plot(rho[0][:, 0], rho_true(rho[0][:, 0]), 'g--', label='True')
     plt.xlabel(r'$r$ [m]')
     plt.ylabel(r'$\rho_{\mathrm{lib}}/\epsilon_0$ [V/m$^2$]')
     plt.grid(alpha=0.8)
