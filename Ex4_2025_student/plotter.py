@@ -74,7 +74,7 @@ def E_0(r):
 def rho_true(r):
     return np.where(r < r1, rho0 * np.sin(np.pi * r / r1), 0)
 
-N2 = np.array([100])
+N2 = np.array([10])
 A = np.array([2])
 nsimul = len(N2)
 datas=[]
@@ -158,10 +158,10 @@ if triv:
     plt.legend()
     plt.show()
 else :
-    plt.plot(rho[0][:, 0], rho[0][:, 1], 'o', lw=3, c='purple', label='Data')
-    plt.plot(rho[0][:, 0], rho_true(rho[0][:, 0]), 'g--', label='True')
+    plt.plot(rho[0][:, 0], rho[0][:, 1], 'o', lw=3, c='purple', label=r'$\nabla\cdot D/\epsilon_0$')
+    plt.plot(rho[0][:, 0], rho_true(rho[0][:, 0]), 'g--', label=r'$\rho_{\mathrm{lib}}/\epsilon_0$')
     plt.xlabel(r'$r$ [m]')
-    plt.ylabel(r'$\rho_{\mathrm{lib}}/\epsilon_0$ [V/m$^2$]')
+    plt.ylabel(r'$\rho/\epsilon_0$ [V/m$^2$]')
     plt.grid(alpha=0.8)
     plt.legend()
     plt.show()
