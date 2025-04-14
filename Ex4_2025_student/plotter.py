@@ -75,76 +75,90 @@ def rho_true(r):
     return np.where(r < r1, rho0 * np.sin(np.pi * r / r1), 0)
 
 N2 = np.array([100])
+A = np.array([2])
 nsimul = len(N2)
 datas=[]
 outputs=[]
-for j in range(len(N2)):
-    output_file = f"data/N2={N2[j]}"
-    outputs.append(output_file)
-    cmd = f"{repertoire}{executable} {input_filename} N1={2*N2[j]} N2={N2[j]} output={output_file}"
-    print(cmd)
-    subprocess.run(cmd, shell=True)
-    print('Done.')
+plt.figure()
+for i in range(len(A)):
+    for j in range(nsimul):
+        output_file = f"data/N2={N2[j]}"
+        outputs.append(output_file)
+        cmd = f"{repertoire}{executable} {input_filename} N1={A[i]*N2[j]} N2={N2[j]} output={output_file}"
+        print(cmd)
+        subprocess.run(cmd, shell=True)
+        print('Done.')
 
-E, D, Phi, rho = [], [], [], []
-conv_phi = []
-err_phi = []
-traj=False
-for k in range(len(N2)):  # Iterate through the results of all simulations
-    e = np.loadtxt(outputs[k]+'_E.out')
-    d = np.loadtxt(outputs[k]+'_D.out')
-    p = np.loadtxt(outputs[k]+'_phi.out')
-    r = np.loadtxt(outputs[k]+'_rho.out')
-    E.append(e)
-    D.append(d)
-    Phi.append(p)
-    rho.append(r)
-    if triv:
-        err = abs(p[1,0]-phi_0(0))
-        err_phi.append(err)
-    else:
-        pr1 = p[np.abs(p[:, 0] - r1).argmin()][1]
-        conv_phi.append(pr1)
+    E, D, Phi, rho = [], [], [], []
+    conv_phi = []
+    err_phi = []
+    traj=False
+    for k in range(nsimul):  # Iterate through the results of all simulations
+        e = np.loadtxt(outputs[k]+'_E.out')
+        d = np.loadtxt(outputs[k]+'_D.out')
+        p = np.loadtxt(outputs[k]+'_phi.out')
+        r = np.loadtxt(outputs[k]+'_rho.out')
+        E.append(e)
+        D.append(d)
+        Phi.append(p)
+        rho.append(r)
+        if triv:
+            err = abs(p[0,1]-phi_0(0))
+            err_phi.append(err)
+        else:
+            pr1 = p[np.abs(p[:, 0] - r1).argmin()][1]
+            conv_phi.append(pr1)
 
-    if traj:
-        plt.figure()
-        plt.plot(e[:,0], e[:, 1], '-',  c='orange')
-        #plt.plot(r, E_0(r), 'k--', label='True')
-        plt.xlabel(r'$r$[m]')
-        plt.ylabel(r'$E(r)$ [V/m]')
-        plt.grid(alpha=0.8)
-        plt.show()
+        if traj:
+            r_plot = np.linspace(0, R, 200)
+            plt.figure()
+            plt.plot(e[:,0], e[:, 1], '-',  c='orange')
+            plt.plot(r_plot, E_0(r_plot), 'k--', label='True')
+            plt.xlabel(r'$r$[m]')
+            plt.ylabel(r'$E(r)$ [V/m]')
+            plt.grid(alpha=0.8)
+            plt.show()
 
-        plt.figure()
-        plt.plot(d[:, 0], d[:, 1], 'g-')
-        plt.xlabel(r'$r$[m]')
-        plt.ylabel(r'$D(r)$ [C/m$^2$]')
-        plt.grid(alpha=0.8)
-        plt.show()
+            plt.figure()
+            plt.plot(d[:, 0], d[:, 1], 'g-')
+            plt.xlabel(r'$r$[m]')
+            plt.ylabel(r'$D(r)$ [C/m$^2$]')
+            plt.grid(alpha=0.8)
+            plt.show()
 
-        plt.figure()
-        plt.plot(p[:,0], p[:, 1], 'r-')
-        #plt.plot(r, phi_0(r), 'k--', label='True')
-        plt.xlabel(r'$r$[m]')
-        plt.ylabel(r'$\phi(r)$ [V]')
-        plt.grid(alpha=0.8)
-        plt.show()
+            plt.figure()
+            plt.plot(p[:,0], p[:, 1], 'ro', label='Data')
+            plt.plot(r_plot, phi_0(r_plot), 'k--', label=r'$\phi_{th}$')
+            plt.xlabel(r'$r$[m]')
+            plt.ylabel(r'$\phi(r)$ [V]')
+            plt.grid(alpha=0.8)
+            plt.legend()
+            plt.show()
+    a=A[i]
+    if a>1: a=int(a)
+    elif a==1 : a=''
+    plt.plot(1/N2**2, conv_phi, '+-', label=rf'$N_1={a}N_2$')
+plt.xlabel(r'$1/N_2^2$')
+plt.ylabel(r'$\phi(r_1)$ [V]')
+plt.grid(alpha=0.8)
+plt.legend()
+plt.show()
 
 if triv:
     # Perform linear regression for convergence order
-    slope, intercept, r_value, p_value, std_err = linregress(np.log(N), np.log(err_phi))
-    y_fit = np.exp(intercept) * N**slope
+    slope, intercept, r_value, p_value, std_err = linregress(np.log(N2), np.log(err_phi))
+    y_fit = np.exp(intercept) * N2**slope
 
     plt.figure()
-    plt.loglog(N, y_fit, 'k--', label=rf"$y = {to_latex_sci(np.exp(intercept),4)}/N^{{({-slope:.4f}\pm{std_err:.4f})}}$")
-    plt.loglog(N, err_phi, 'rx')
+    plt.loglog(N2, y_fit, 'k--', label=rf"$y = {to_latex_sci(np.exp(intercept),3)}/N^{{({-slope:.3f}\pm{std_err:.3f})}}$")
+    plt.loglog(N2, err_phi, 'rx')
     plt.xlabel(r'$N_1(=N_2)$')
     plt.ylabel(r'$\Delta\phi(r=0)$ [V]')
     plt.grid(alpha=0.8)
     plt.legend()
     plt.show()
 else :
-    plt.plot(rho[0][:, 0], rho[0][:, 1], lw=3, c='purple', label='Data')
+    plt.plot(rho[0][:, 0], rho[0][:, 1], 'o', lw=3, c='purple', label='Data')
     plt.plot(rho[0][:, 0], rho_true(rho[0][:, 0]), 'g--', label='True')
     plt.xlabel(r'$r$ [m]')
     plt.ylabel(r'$\rho_{\mathrm{lib}}/\epsilon_0$ [V/m$^2$]')
