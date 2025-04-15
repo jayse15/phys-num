@@ -44,6 +44,7 @@ with open(input_filename, "r") as file:
 
 
 def to_latex_sci(num, precision=2):
+    """Turns number into Latex string in scientific notation."""
     if num == 0:
         return r'$0$'
 
@@ -75,7 +76,7 @@ def rho_true(r):
     return np.where(r < r1, rho0 * np.sin(np.pi * r / r1), 0)
 
 N2 = np.array([10])
-A = np.array([2])
+A = np.array([2]) # proportionnality constants between N1 and N2
 nsimul = len(N2)
 datas=[]
 outputs=[]
@@ -103,13 +104,14 @@ for i in range(len(A)):
         Phi.append(p)
         rho.append(r)
         if triv:
-            err = abs(p[0,1]-phi_0(0))
+            err = abs(p[0,1]-phi_0(0)) #error on phi(0) for trivial case
             err_phi.append(err)
         else:
-            pr1 = p[np.abs(p[:, 0] - r1).argmin()][1]
+            pr1 = p[np.abs(p[:, 0] - r1).argmin()][1] # phi(r1) found as closest phi to r1
             conv_phi.append(pr1)
 
         if traj:
+            # Plot E, D and Phi
             r_plot = np.linspace(0, R, 200)
             plt.figure()
             plt.plot(e[:,0], e[:, 1], '-',  c='orange')
@@ -137,7 +139,7 @@ for i in range(len(A)):
     a=A[i]
     if a>1: a=int(a)
     elif a==1 : a=''
-    plt.plot(1/N2**2, conv_phi, '+-', label=rf'$N_1={a}N_2$')
+    plt.plot(1/N2**2, conv_phi, '+-', label=rf'$N_1={a}N_2$') # Plots convergence for ratio A[i]
 plt.xlabel(r'$1/N_2^2$')
 plt.ylabel(r'$\phi(r_1)$ [V]')
 plt.grid(alpha=0.8)
@@ -149,6 +151,7 @@ if triv:
     slope, intercept, r_value, p_value, std_err = linregress(np.log(N2), np.log(err_phi))
     y_fit = np.exp(intercept) * N2**slope
 
+    # Log-Log plot for convergence in trivial case
     plt.figure()
     plt.loglog(N2, y_fit, 'k--', label=rf"$y = {to_latex_sci(np.exp(intercept),3)}/N^{{({-slope:.3f}\pm{std_err:.3f})}}$")
     plt.loglog(N2, err_phi, 'rx')
@@ -158,6 +161,7 @@ if triv:
     plt.legend()
     plt.show()
 else :
+    # Plot of rho calculated with D vs rho_true
     plt.plot(rho[0][:, 0], rho[0][:, 1], 'o', lw=3, c='purple', label=r'$\nabla\cdot D/\epsilon_0$')
     plt.plot(rho[0][:, 0], rho_true(rho[0][:, 0]), 'g--', label=r'$\rho_{\mathrm{lib}}/\epsilon_0$')
     plt.xlabel(r'$r$ [m]')
@@ -166,16 +170,18 @@ else :
     plt.legend()
     plt.show()
 
+    # Q calculated with gauss (L=1)
     Q_lib = 2*np.pi*D[0][:, 0]*D[0][:, 1]
     Q_tot = 2*np.pi*e0*E[0][:, 0]*E[0][:, 1]
 
+    # Q calculated with integral of rho over volume and middle point approximation
     f = rho[0][:, 0] * e0*rho[0][:, 1]
-    dr = rho[0][1:, 0]- rho[0][:-1, 0]  # length N
+    dr = rho[0][1:, 0]- rho[0][:-1, 0]
     partial = 0.5 * (f[:-1] + f[1:]) * dr
-    integral = np.cumsum(partial)  # length N
+    integral = np.cumsum(partial)
     Q_lib_rho = 2.0 * np.pi * integral
 
-
+    # Different Q plotted together
     plt.plot(D[0][:, 0], Q_lib, lw=3, label=r'$Q_{\mathrm{lib}}$')
     plt.plot(E[0][:, 0], Q_tot, label=r'$Q_{\mathrm{tot}}$')
     plt.plot(rho[0][1:, 0], Q_lib_rho, '--k', label=r'$Q_{\mathrm{lib}}$ avec $\rho_{\mathrm{lib}}$')

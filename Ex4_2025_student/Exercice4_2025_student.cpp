@@ -179,6 +179,7 @@ int main(int argc, char* argv[])
         E[i] = (phi[i]-phi[i+1])/h[i];
         D[i] = E[i]*epsilon(midPoint[i], r1, R, epsilon_a, epsilon_b)*e0;
     }
+    // Calculate rho with rho = Div D
     for (int i = 0; i < pointCount - 2; ++i) {
       rho[i] = (midPoint[i+1]*D[i+1] - midPoint[i]*D[i])/(midPoint[i+1]-midPoint[i]) /(r[i+1]*e0);
     }
@@ -226,7 +227,7 @@ int main(int argc, char* argv[])
     }
 
     {
-      // Charge density rho/e0
+      // Charge density rho/e0 calculated with D
       ofstream ofs(fichier_rho);
       ofs.precision(15);
 
