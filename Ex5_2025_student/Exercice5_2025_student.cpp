@@ -12,8 +12,11 @@ using namespace std;
 
 
 double energy(const std::vector<double>& fnow, double dx) {
-  double ener = 0.0; // TODO: compute quantity E 
-    return 0.0;
+  double ener = 0.0; // We use middle point approximation
+  for (int i=0; i < fnow.size()-1; i++){
+    ener+=(pow(fnow[i+1], 2) + pow(fnow[i], 2))/2.0 *dx;
+  }
+    return ener;
 }
 
 
@@ -22,27 +25,27 @@ void boundary_condition(vector<double> &fnext, vector<double> &fnow, double cons
 		vector<double> &beta2, string &bc_l, string &bc_r, int &N)
 {
       if (bc_l == "fixe"){
-        fnext[0] = 0.0; 
+        fnext[0] = fnow[0];
 	// NB: on peut aussi utiliser la condition "excitation" et poser A=0
       }else if(bc_l == "libre"){
-        fnext[0] = 0.0; // TODO : Modifier pour imposer la condition au bord gauche libre
+        fnext[0] = fnext[1];
       }else if (bc_l =="sortie"){
-        fnext[0] = 0.0; // TODO : Modifier pour imposer la condition au bord gauche "sortie de l'onde"
+        fnext[0] = fnow[0] + sqrt(beta2[0])*(fnow[1]-fnow[0]); // we use derivitative in 1
       }else if (bc_l == "excitation"){
-        fnext[0] = 0.0; // TODO : Modifier pour imposer la condition au bord gauche sinusoidale
+        fnext[0] = A*sin(om*(t+dt));
       }else{
         cerr << "Merci de choisir une condition aux bord gauche valide" << endl;
       }
-	      
+
       if (bc_r == "fixe"){
-        fnext[N-1] = 0.0; 
-	// NB: on peut aussi utiliser la condition "excitation" et poser A=0	
+        fnext[N-1] = fnow[0];
+	// NB: on peut aussi utiliser la condition "excitation" et poser A=0
       }else if(bc_r == "libre"){
-        fnext[N-1] = 0.0; // TODO : Modifier pour imposer la condition au bord droit libre
+        fnext[N-1] = fnext[N-1];
       }else if (bc_r =="sortie"){
-        fnext[N-1] = 0.0; // TODO : Modifier pour imposer la condition au bord droit "sortie de l'onde"
-      }else if (bc_l == "excitation"){ 
-        fnext[N-1] = 0.0; // TODO : Modifier pour imposer la condition au bord droit sinusoidale
+        fnext[N-1] = fnow[N-1] - sqrt(beta2[N-1])*(fnow[N-1]-fnow[N-2]);
+      }else if (bc_r == "excitation"){
+        fnext[N-1] = A*sin(om*(t+dt));
       }else{
         cerr << "Merci de choisir une condition aux bord droit valide" << endl;
       }
@@ -58,8 +61,12 @@ if(initialization=="mode"){
   finit_ = 0.0;
 }
 else{
-  // TODO: initialiser la fonction f(x,t=0) selon la donnée du problème
-  finit_ =0.0;
+  // Initialise la fonction f(x,t=0) selon la donnée du problème
+  if ((x<=x1) or (x>=x2)) {
+    finit_=0.0;
+  } else {
+    finit_ = f_hat/2.0 * (1.0 - cos(2.0*PI*(x-x1)/(x2-x1)));
+  }
 }
   return finit_;
 }
@@ -126,7 +133,7 @@ int main(int argc, char* argv[])
 
 // Type de forme initiale de la vague: selon donnée Eq.(4) ou mode propre
 // ('mode' pour mode propre, autrement Eq.(4))
-  string initialization = configFile.get<string>("initialization"); 
+  string initialization = configFile.get<string>("initialization");
 
 // Onde partant vers la gauche ou vers la droite ou statique
 // (par exemple 'left', 'right', 'static')
@@ -149,28 +156,36 @@ int main(int argc, char* argv[])
   bool ecrire_f = configFile.get<bool>("ecrire_f"); // Exporter f(x,t) ou non
  // Eq.(1) ou Eq.(2) [ou Eq.(6) (faculattif)]: Eq1, Eq2 ou Eq6
   string equation_type = configFile.get<string>("equation_type");
-  
 
-  for(int i(0); i<N; ++i){ 
+
+  for(int i(0); i<N; ++i){
      x[i] = i * dx ;
      h0[i] = 0.0;
      if(v_uniform){
         h0[i]  = h00;
-     } 
+     }
      else {
-       // TODO: programmer la fonction h(x) selon la donnée
-       h0[i]  = 999.999; // MODIFIER
+       if (x[i]<=xa){
+        h0[i] = hL;
+       }
+       else if (x[i]>=xb) {
+        h0[i] = hR;
+       }
+       else
+       {
+        h0[i] = 0.5*(hL+hR) + 0.5*(hL-hR)*cos(PI*(x[i]-xa)/(xb-xa));
+       }
      }
      vel2[i]  = g* h0[i];
   }
   // maiximal value of u^2 (to be used to set dt)
   auto max_vel2 = std::max_element(vel2.begin(), vel2.end());
-  // TODO: set dt for given CFL
-  dt = 1.0; // MODIFY
-  // TODO: define dt and CFL with given nsteps
+  // Set dt for given CFL
+  dt = CFL*dx/sqrt(*max_vel2);
+  // Define dt and CFL with given nsteps
   if(impose_nsteps){
-    dt  = 1.0; // MODIFY
-    CFL = 1.0; // MODIFY
+    dt  = tfin/nsteps;
+    CFL = *max_vel2*dt/dx;
   }
 
   // Fichiers de sortie :
@@ -190,23 +205,21 @@ int main(int argc, char* argv[])
 
   // Initialisation des tableaux du schema numerique :
 
-  //TODO initialize f and beta
+  // Initialize f and beta
   for(int i(0); i<N; ++i)
   {
-    fpast[i] = 0.;
-    fnow[i]  = 0.;
-    beta2[i] = 1.0; // TODO: Modifier pour calculer beta^2 aux points de maillage
-
-    fnow[i]  = finit(x[i], n_init,  L, f_hat, x1, x2, initialization);
+    fpast[i] = 0.0;
+    fnow[i]  = finit(x[i], n_init, L, f_hat, x1, x2, initialization);
+    beta2[i] = vel2[i]*pow(dt, 2)*pow(dx, 2);
 
     if(initial_state =="static"){
-      fpast[i] = 0.0; // TODO: system is at rest for t<=0, 
+      fpast[i] = fnow[i]; // System is at rest for t<=0,
     }
-    else if(initial_state =="right"){ 
-      fpast[i] = 0.0; // TODO: propagation to the right
+    else if(initial_state =="right"){
+      fpast[i] = finit(x[i]+sqrt(vel2[i])*dt, n_init, L, f_hat, x1, x2, initialization); // Propagation to the right
     }
     else if(initial_state =="left"){
-      fpast[i] = 0.0; // TODO: propagation to the left
+      fpast[i] = fpast[i] = finit(x[i]-sqrt(vel2[i])*dt, n_init, L, f_hat, x1, x2, initialization); // Propagation to the right
     }
   }
 
