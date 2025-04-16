@@ -1,0 +1,32 @@
+% Physique :
+cb_gauche=libre ! fixe, libre, sortie, excitation
+cb_droite=fixe  ! fixe, libre, sortie, excitation
+v_uniform = true
+
+A=0.1
+f_hat = 1.0
+x1=3.0
+x2=8.0
+
+tfin=1.0
+equation_type=B ! A, B, C
+nx=64
+n_init=3 ! numéro du mode propre à initialiser
+initialization=mode ! mode, autre
+initial_state=static ! right, left, static
+
+CFL=1.0
+nsteps=40
+impose_nsteps = true 
+
+output=test.out
+n_stride=1
+ecrire_f=1
+
+hL = 8000.0
+hR = 20.0
+h00= 4.0
+xa= 450e3
+xb= 950e3
+L= 15.0 ! right boundary of the domain
+om=0.1  ! angular frequency of excitation
