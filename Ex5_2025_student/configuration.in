@@ -9,7 +9,7 @@ x1=3.0
 x2=8.0
 
 tfin=3.0
-equation_type=B // A, B, C
+equation_type=C // A, B, C
 nx=50
 n_init=3 // numéro du mode propre à initialiser
 initialization=autre // mode, autre

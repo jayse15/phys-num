@@ -57,8 +57,8 @@ double finit(double x, double n_init, double L, double f_hat, double x1, double 
   const double PI = 3.1415926535897932384626433832795028841971e0;
 
 if(initialization=="mode"){
-  // TODO: initialiser la fonction f(x,t=0) selon un mode propre
-  finit_ = 0.0;
+  double kn = PI*(n_init + 0.5)/L;
+  finit_ = cos(kn*x);
 }
 else{
   // Initialise la fonction f(x,t=0) selon la donnée du problème
@@ -251,7 +251,8 @@ int main(int argc, char* argv[])
                    2.0*(1-beta2[i])*fnow[i] - fpast[i] + beta2[i]*(fnow[i+1]+fnow[i-1]);
       }
       else if (equation_type == "C"){
-        fnext[i] = 0;
+        fnext[i] = fnow[i]*(2.0*(1-2.0*beta2[i]) + beta2[i+1] + beta2[i-1]) +
+                    (fnow[i+1] - fnow[i-1])*(beta2[i] + 0.5*(beta2[i+1]-beta2[i-1])) - fpast[i];
       }
     }
 
