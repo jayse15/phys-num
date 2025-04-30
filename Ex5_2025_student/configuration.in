@@ -1,6 +1,6 @@
-% Physique :
-cb_gauche=libre ! fixe, libre, sortie, excitation
-cb_droite=fixe  ! fixe, libre, sortie, excitation
+// Physique :
+cb_gauche=libre // fixe, libre, sortie, excitation
+cb_droite=fixe  // fixe, libre, sortie, excitation
 v_uniform = true
 
 A=0.1
@@ -8,15 +8,15 @@ f_hat = 1.0
 x1=3.0
 x2=8.0
 
-tfin=1.0
-equation_type=B ! A, B, C
-nx=64
-n_init=3 ! numéro du mode propre à initialiser
-initialization=mode ! mode, autre
-initial_state=static ! right, left, static
+tfin=3.0
+equation_type=B // A, B, C
+nx=50
+n_init=3 // numéro du mode propre à initialiser
+initialization=autre // mode, autre
+initial_state=static // right, left, static
 
-CFL=1.0
-nsteps=40
+CFL=0.5
+nsteps=75
 impose_nsteps = true
 
 output=test.out
@@ -28,5 +28,5 @@ hR = 20.0
 h00= 4.0
 xa= 450e3
 xb= 950e3
-L= 1000e3 ! right boundary of the domain
-om=0.1  ! angular frequency of excitation
+L= 15 // right boundary of the domain
+om=0.1  // angular frequency of excitation

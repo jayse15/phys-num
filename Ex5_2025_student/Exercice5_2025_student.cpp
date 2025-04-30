@@ -38,7 +38,7 @@ void boundary_condition(vector<double> &fnext, vector<double> &fnow, double cons
       }
 
       if (bc_r == "fixe"){
-        fnext[N-1] = fnow[0];
+        fnext[N-1] = fnow[N-1];
 	// NB: on peut aussi utiliser la condition "excitation" et poser A=0
       }else if(bc_r == "libre"){
         fnext[N-1] = fnext[N-1];
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
   double dx;
   double dt;
   double t;
-  double Nsteps;
+
   int stride(0);
 
   string inputPath("configuration.in"); // Fichier d'input par defaut
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
   // Define dt and CFL with given nsteps
   if(impose_nsteps){
     dt  = tfin/nsteps;
-    CFL = *max_vel2*dt/dx;
+    CFL = sqrt(*max_vel2)*dt/dx;
   }
 
   // Fichiers de sortie :
@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
   {
     fpast[i] = 0.0;
     fnow[i]  = finit(x[i], n_init, L, f_hat, x1, x2, initialization);
-    beta2[i] = vel2[i]*pow(dt, 2)*pow(dx, 2);
+    beta2[i] = vel2[i]*pow(dt/dx, 2);
 
     if(initial_state =="static"){
       fpast[i] = fnow[i]; // System is at rest for t<=0,
@@ -242,7 +242,17 @@ int main(int argc, char* argv[])
     // Evolution :
     for(int i(1); i<N-1; ++i)
     {
-      fnext[i] = 0.0; // TODO : Schémas pour les 3 cas, Equation A ou B ou C
+      fnext[i] = 0.0;
+      if (equation_type == "A"){
+        fnext[i] = 2.0*(1-beta2[i])*(fnow[i]-fpast[i]) + beta2[i]*(fnow[i+1]+fnow[i-1]);
+      }
+      else if (equation_type == "B"){
+        fnext[i] = (beta2[i+1]-beta2[i-1])/4.0 * (fnow[i+1]-fnow[i-1]) +
+                   2.0*(1-beta2[i])*fnow[i] - fpast[i] + beta2[i]*(fnow[i+1]+fnow[i-1]);
+      }
+      else if (equation_type == "C"){
+        fnext[i] = 0;
+      }
     }
 
     // Impose boundary conditions
