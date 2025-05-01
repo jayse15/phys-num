@@ -9,15 +9,15 @@ x1=3.0
 x2=8.0
 
 tfin=3.0
-equation_type=C // A, B, C
+equation_type=B // A, B, C
 nx=50
 n_init=3 // numéro du mode propre à initialiser
 initialization=autre // mode, autre
 initial_state=static // right, left, static
 
-CFL=0.5
+CFL=1.001
 nsteps=75
-impose_nsteps = true
+impose_nsteps = false
 
 output=test.out
 n_stride=1

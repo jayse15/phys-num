@@ -62,9 +62,24 @@ def to_latex_sci(num, precision=2):
 
 datas=[]
 outputs=[]
-states = ['right', 'left', 'static']
-nsimul = len(states)
+CFL = parameters['CFL']
+nx = parameters['nx']
+ninit = parameters['n_init']
+h0 = parameters['h00']
+L = parameters['L']
+g=9.81
 
+om_n = np.sqrt(g*h0)*(ninit+0.5)*np.pi / L
+oms = np.linspace(om_n-10, om_n+10, 40)
+print(om_n)
+
+states = ['static']
+nsimul = len(states)
+#nsimul = len(oms)
+evolve = False
+heat = True
+
+E = []
 for i in range(nsimul):
     output_file = f"data/{states[i]}.out"
     outputs.append(output_file)
@@ -77,20 +92,46 @@ for i in range(nsimul):
     e = np.loadtxt(outputs[i]+'_en')
     x = np.loadtxt(outputs[i]+'_x')
     v = np.loadtxt(outputs[i]+'_v')
+    t = f[:, 0]
+    f = f[:, 1:]
+    e = e[:, 1:]
+
+    E.append(e.max())
 
 
-    plt.ion()
-    fig, ax = plt.subplots()
-    line, = ax.plot(x, f[0, 1:], 'b+-')
-    ax.set_ylim(-2, 2)
+    if evolve :
+        plt.ion()
+        fig, ax = plt.subplots()
+        line, = ax.plot(x, f[0], 'b+-')
+        ax.set_ylim(f.min() - 0.1, f.max() + 0.1)
 
-    # Update loop
-    for frame in range(1, len(f)):
-        line.set_ydata(f[frame, 1:])
-        ax.set_title(f"Wave at t = {f[frame, 0]:.2f} s")
-        plt.draw()
-        plt.pause(0.01)
+        # Update loop
+        for frame in range(1, len(f)):
+            line.set_ydata(f[frame])
+            ax.set_title(f"Wave at t = {t[frame]:.3f} s")
+            plt.draw()
+            plt.pause(0.01)
+
+        plt.ioff()
+        plt.show()
+
+    if heat :
+        # Plot heatmap
+        plt.figure()
+        extent = [x.min(), x.max(), t.min(), t.max()]
+        max_abs = np.abs(f).max()
+
+        plt.imshow(f, aspect='auto', extent=extent, origin='lower', cmap='seismic',
+                   vmin=-max_abs, vmax=max_abs)
+        plt.colorbar(label=r'Amplitude $f(x, t)$')
+        plt.xlabel(r"$x$ [m]")
+        plt.ylabel(r"$t$ [s]")
+        plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
+        plt.show()
 
 
-    plt.ioff()
-    plt.show()
+plt.figure()
+plt.plot(oms, E, 'r+-')
+plt.xlabel(r"$\omega$ [rad/s]")
+plt.ylabel(r"$\hat{E}$")
+plt.show()
