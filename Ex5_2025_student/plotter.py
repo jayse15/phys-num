@@ -9,7 +9,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 250,                 # DPI for displaying figures
+    'figure.dpi': 300,                 # DPI for displaying figures
     'font.size': 16,
     'lines.linewidth':2,
     'lines.markersize':7,
@@ -39,6 +39,8 @@ with open(input_filename, "r") as file:
         # Convert to appropriate type
         if value.replace('.', '', 1).replace('e', '', 1).replace('-', '', 1).isdigit():  # Float check
             parameters[key] = float(value)
+        elif (value=='false' or value=='true'):
+            parameters[key] = (value=='true')
         else:  # Assume string (for file names)
             parameters[key] = value
 
@@ -59,7 +61,6 @@ def to_latex_sci(num, precision=2):
 
     return rf'{sign}{mantissa:.{precision}f}\cdot 10^{{{exponent}}}'
 
-
 datas=[]
 outputs=[]
 CFL = parameters['CFL']
@@ -67,23 +68,50 @@ nx = parameters['nx']
 ninit = parameters['n_init']
 h0 = parameters['h00']
 L = parameters['L']
+impose_n = parameters['impose_nsteps']
 g=9.81
+dx = L/nx
 
-om_n = np.sqrt(g*h0)*(ninit+0.5)*np.pi / L
-oms = np.linspace(om_n-10, om_n+10, 40)
-print(om_n)
+def f_a(x):
+    """Fonction mode propre analytique"""
+    return np.cos(np.pi*(ninit+0.5)/L * x)
+
+def err(f, x, dx):
+    """Erreur entre f et f_analytique"""
+    a = np.abs(f-f_a(x))
+    return ((a[1:] + a[:-1])/2 * dx).sum()
+
+om_n = np.sqrt(g*h0)*(ninit+0.5)*np.pi / L # Mode propre
+nTn = 30 # Nombre de périodes de transit
+tfin = nTn*2*np.pi/om_n # Periode
+oms = [om_n - 3 + i * 6 / (100 - 1) for i in range(100)] # Omegas pour résonnance
 
 states = ['static']
-nsimul = len(states)
-#nsimul = len(oms)
-evolve = False
-heat = True
+n = 30
+nsteps=np.array([n]) #, 2*n, 3*n, 4*n, 8*n, 12*n, 16*n, 25*n, 32*n, 40*n, 50*n, 64*n])
+Nx = np.array([nx]) #, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n, 50*nx, 64*nx])
+#nsimul = len(states)
+#nsimul = len(nsteps)
+nsimul = len(oms)
+evolve = False # évolution continue de la vague
+heat = False # Heatmap de l'amplitude, x et t
+mode = True # Mode propres
+conv = False
+E_ = True
+
+if impose_n :
+    dt=tfin/nsteps
+    dx=L/Nx
+    CFL = np.sqrt(g*h0)*dt/dx
+
 
 E = []
+error=[]
 for i in range(nsimul):
-    output_file = f"data/{states[i]}.out"
+    output_file = f"data/{oms[i]}.out"
     outputs.append(output_file)
-    cmd = f"{repertoire}{executable} {input_filename} output={output_file} initial_state={states[i]}"
+    cmd = f"{repertoire}{executable} {input_filename} output={output_file} initial_state={states[0]}"
+    if mode : cmd+=f" tfin={tfin} nsteps={nsteps[0]} nx={Nx[0]} om={oms[i]}"
     print(cmd)
     subprocess.run(cmd, shell=True)
     print('Done.')
@@ -95,6 +123,9 @@ for i in range(nsimul):
     t = f[:, 0]
     f = f[:, 1:]
     e = e[:, 1:]
+
+    if conv:
+        error.append(err(f[-1], x, dx[i]))
 
     E.append(e.max())
 
@@ -115,6 +146,20 @@ for i in range(nsimul):
         plt.ioff()
         plt.show()
 
+        if mode :
+            x_plot=np.linspace(x.min(), x.max(), 300)
+            plt.figure()
+            plt.plot(x, f[-1], 'b+-', label=r'$f_{num}(x, t=T_n)$')
+            plt.plot(x_plot, f_a(x_plot), 'r', label=r'$f_{ana}(x, t=T_n)$')
+            plt.xlabel(r'$x$ [m]')
+            plt.ylabel(r'$y$ [u.a.]')
+            plt.title(rf"$\beta_{{CFL}}={CFL[i]:.3f}$, $n_x={int(Nx[i])}$, $n={int(ninit)}$")
+            plt.legend(loc='upper right')
+            plt.grid(alpha=0.8)
+            plt.show()
+
+
+
     if heat :
         # Plot heatmap
         plt.figure()
@@ -126,12 +171,30 @@ for i in range(nsimul):
         plt.colorbar(label=r'Amplitude $f(x, t)$')
         plt.xlabel(r"$x$ [m]")
         plt.ylabel(r"$t$ [s]")
-        plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
+        plt.title(rf"$\beta_{{CFL}}={CFL[i]}$, $n_x={int(nx)}$")
         plt.show()
 
+if conv:
+    # Perform linear regression for convergence order
+    slope, intercept, r_value, p_value, std_err = linregress(np.log(dt), np.log(error))
+    y_fit = np.exp(intercept) * dt**slope
 
-plt.figure()
-plt.plot(oms, E, 'r+-')
-plt.xlabel(r"$\omega$ [rad/s]")
-plt.ylabel(r"$\hat{E}$")
-plt.show()
+    plt.figure()
+    plt.loglog(dt, error, 'rx')
+    plt.loglog(dt, y_fit, 'k--', label=rf"$y = {np.exp(intercept):.3f}\Delta t^{{({slope:.3f}\pm{std_err:.3f})}}$")
+    plt.xlabel(r"$\Delta t$ [s]")
+    plt.ylabel(r"Erreur")
+    plt.legend()
+    plt.title(rf"$\beta_{{CFL}}={CFL[0]:.3f}$, $n=3$")
+    plt.show()
+
+if E_:
+    E=np.array(E)
+    plt.figure()
+    plt.plot(oms, E, 'b+-', lw=1.5)
+    plt.vlines(om_n, ymin=E.min(), ymax=E.max(), colors='r', lw=1, label=r'$\omega_n$')
+    plt.xlabel(r"$\omega$ [rad/s]")
+    plt.ylabel(r"$\hat{E}$ [u.a.]")
+    plt.legend()
+    plt.title(rf"$\beta_{{CFL}}={CFL}$, $n=3$, $n_x={int(nx)}$, $t_{{\mathrm{{fin}}}}={int(nTn)}T_n$")
+    plt.show()
