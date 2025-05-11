@@ -8,7 +8,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 150,                 # DPI for displaying figures
+    'figure.dpi': 275,                 # DPI for displaying figures
     'font.size': 16,
     'lines.linewidth':2,
     'lines.markersize':7,
@@ -124,9 +124,9 @@ tfin = nTn*2*np.pi/om_n # Periode
 oms = [om_n - 3 + i * 6 / (100 - 1) for i in range(100)] # Omegas pour résonnance
 
 states = ['right']
-n = 30
-nsteps=np.array([n]) #, 2*n, 3*n, 4*n, 8*n, 12*n, 16*n, 25*n, 32*n, 40*n, 50*n, 64*n])
-Nx = np.array([nx]) #, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n, 50*nx, 64*nx])
+n = 20
+nsteps=np.array([n])#, 2*n, 3*n, 4*n, 8*n, 12*n, 16*n, 25*n, 32*n, 40*n, 50*n, 64*n])
+Nx = np.array([nx])#, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n, 50*nx, 64*nx])
 #nsimul = len(states)
 #nsimul = len(nsteps)
 #nsimul = len(oms)
@@ -149,7 +149,8 @@ for i in range(1):
     output_file = f"data/xa={450}km.out"
     outputs.append(output_file)
     cmd = f"{repertoire}{executable} {input_filename} output={output_file} initial_state={states[0]}"
-    if mode : cmd+=f" tfin={tfin} nsteps={nsteps[0]} nx={Nx[0]} om={oms[i]}"
+    if mode : cmd+=f" tfin={tfin} nsteps={nsteps[0]} nx={Nx[0]}"
+    if E_ : cmd+=f" om={oms[i]}"
     print(cmd)
     subprocess.run(cmd, shell=True)
     print('Done.')
@@ -191,7 +192,7 @@ for i in range(1):
             plt.plot(x, f[-1], 'b+-', label=r'$f_{num}(x, t=T_n)$')
             plt.plot(x_plot, f_a(x_plot), 'r', label=r'$f_{ana}(x, t=T_n)$')
             plt.xlabel(r'$x$ [m]')
-            plt.ylabel(r'$y$ [u.a.]')
+            plt.ylabel(r'$y$ [m]')
             plt.title(rf"$\beta_{{CFL}}={CFL[i]:.3f}$, $n_x={int(Nx[i])}$, $n={int(ninit)}$")
             plt.legend(loc='upper right')
             plt.grid(alpha=0.8)
@@ -260,14 +261,14 @@ for i in range(1):
     if heat :
         # Plot heatmap
         plt.figure()
-        extent = [x.min()/1000, x.max()/1000, t.min()/3600, t.max()/3600]
+        extent = [x.min(), x.max(), t.min(), t.max()]
         max_abs = np.abs(f).max()
 
         plt.imshow(f, aspect='auto', extent=extent, origin='lower', cmap='seismic',
                    vmin=-max_abs, vmax=max_abs)
-        plt.colorbar(label=r'Amplitude $f(x, t)$ [m]')
-        plt.xlabel(r"$x$ [km]")
-        plt.ylabel(r"$t$ [h]")
+        plt.colorbar(label=r'$f(x, t)$ [m]')
+        plt.xlabel(r"$x$ [m]")
+        plt.ylabel(r"$t$ [s]")
         plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
         plt.show()
 
@@ -280,7 +281,7 @@ if conv:
     plt.loglog(dt, error, 'rx')
     plt.loglog(dt, y_fit, 'k--', label=rf"$y = {np.exp(intercept):.3f}\Delta t^{{({slope:.3f}\pm{std_err:.3f})}}$")
     plt.xlabel(r"$\Delta t$ [s]")
-    plt.ylabel(r"Erreur")
+    plt.ylabel(r"Erreur [m$^2$]")
     plt.legend()
     plt.title(rf"$\beta_{{CFL}}={CFL[0]:.3f}$, $n=3$")
     plt.show()
@@ -289,9 +290,10 @@ if E_:
     E=np.array(E)
     plt.figure()
     plt.plot(oms, E, 'b+-', lw=1.5)
-    plt.vlines(om_n, ymin=E.min(), ymax=E.max(), colors='r', lw=1, label=r'$\omega_n$')
+    plt.vlines(om_n, ymin=E.min()*0.8, ymax=E.max()*1.1, colors='r', lw=1, label=r'$\omega_n$')
     plt.xlabel(r"$\omega$ [rad/s]")
-    plt.ylabel(r"$\hat{E}$ [u.a.]")
+    plt.ylabel(r"$\hat{E}$ [m$^3$]")
+    plt.grid(alpha=0.8)
     plt.legend()
     plt.title(rf"$\beta_{{CFL}}={CFL}$, $n=3$, $n_x={int(nx)}$, $t_{{\mathrm{{fin}}}}={int(nTn)}T_n$")
     plt.show()
