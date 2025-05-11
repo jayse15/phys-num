@@ -12,14 +12,14 @@ tfin=9000
 equation_type=B // A, B, C
 nx=5000
 n_init=3 // numéro du mode propre à initialiser
-initialization=autre // mode, autre
+initialization=mode // mode, autre
 initial_state=right // right, left, static
 
-CFL=1
+CFL=1.0
 nsteps=75
 impose_nsteps = false
 
-output=test.ou
+output=test.out
 n_stride=25
 ecrire_f=1
 
