@@ -1,4 +1,5 @@
 
+
 import numpy as np
 import subprocess
 import matplotlib.pyplot as plt
@@ -86,18 +87,19 @@ nTn = 30 # Nombre de périodes de transit
 tfin = nTn*2*np.pi/om_n # Periode
 oms = [om_n - 3 + i * 6 / (100 - 1) for i in range(100)] # Omegas pour résonnance
 
-states = ['static']
+states = ['right']
 n = 30
 nsteps=np.array([n]) #, 2*n, 3*n, 4*n, 8*n, 12*n, 16*n, 25*n, 32*n, 40*n, 50*n, 64*n])
 Nx = np.array([nx]) #, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n, 50*nx, 64*nx])
 #nsimul = len(states)
 #nsimul = len(nsteps)
-nsimul = len(oms)
-evolve = False # évolution continue de la vague
+#nsimul = len(oms)
+evolve = True # évolution continue de la vague
 heat = False # Heatmap de l'amplitude, x et t
-mode = True # Mode propres
+mode = False # Mode propres
 conv = False
-E_ = True
+E_ = False
+tsunami = True
 
 if impose_n :
     dt=tfin/nsteps
@@ -107,8 +109,8 @@ if impose_n :
 
 E = []
 error=[]
-for i in range(nsimul):
-    output_file = f"data/{oms[i]}.out"
+for i in range(1):
+    output_file = f"data/xa={450}km.out"
     outputs.append(output_file)
     cmd = f"{repertoire}{executable} {input_filename} output={output_file} initial_state={states[0]}"
     if mode : cmd+=f" tfin={tfin} nsteps={nsteps[0]} nx={Nx[0]} om={oms[i]}"
@@ -124,6 +126,36 @@ for i in range(nsimul):
     f = f[:, 1:]
     e = e[:, 1:]
 
+    if tsunami:
+        max_i = f.argmax(axis=1)
+        maxes=[]
+        x_maxes=[]
+        for j in range(len(max_i)):
+            i_max = max_i[j]
+
+            if i_max <= 0:
+                cols = [0, 1, 2]
+            elif i_max >= f.shape[1] - 1:
+                cols = [f.shape[1]-3, f.shape[1]-2, f.shape[1]-1]
+            else:
+                cols = [i_max - 1, i_max, i_max + 1]
+
+            maxes.append(f[j, cols])
+            x_maxes.append(x[cols])
+
+        X = np.array(x_maxes)
+        Y = np.array(maxes)
+        f_max = []
+        x_max = []
+
+        for k in range(len(X)):
+            # Polynôme quadratique
+            a, b, c = np.polyfit(X[k], Y[k], deg=2)
+            crete = -b/(2*a) # Valeur de x du maximum
+            x_max.append(crete)
+            f_max.append(a*crete**2 + b*crete + c)
+
+
     if conv:
         error.append(err(f[-1], x, dx[i]))
 
@@ -133,7 +165,7 @@ for i in range(nsimul):
     if evolve :
         plt.ion()
         fig, ax = plt.subplots()
-        line, = ax.plot(x, f[0], 'b+-')
+        line, = ax.plot(x, f[0], 'b')
         ax.set_ylim(f.min() - 0.1, f.max() + 0.1)
 
         # Update loop
