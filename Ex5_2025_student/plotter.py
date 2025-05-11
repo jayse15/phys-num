@@ -69,6 +69,14 @@ ninit = parameters['n_init']
 h0 = parameters['h00']
 L = parameters['L']
 impose_n = parameters['impose_nsteps']
+f_hat = parameters['f_hat']
+hL = parameters['hL']
+hR = parameters['hR']
+xa = parameters['xa']
+xb = parameters['xb']
+x1 = parameters['x1']
+x2 = parameters['x2']
+
 g=9.81
 dx = L/nx
 
@@ -80,6 +88,36 @@ def err(f, x, dx):
     """Erreur entre f et f_analytique"""
     a = np.abs(f-f_a(x))
     return ((a[1:] + a[:-1])/2 * dx).sum()
+
+def v2(x):
+    """h(x) non-uniform."""
+    x = np.asarray(x)
+    h_values = np.where(
+        x <= xa,
+        hL,
+        np.where(
+            x >= xb,
+            hR,
+            0.5 * (hL + hR) + 0.5 * (hL - hR) * np.cos(np.pi * (x - xa) / (xb - xa))
+        )
+    )
+    return g*h_values
+
+def WKB_A(x):
+    """WKB for case A"""
+    A0 = f_hat/(v2(x2/2 + x1/2))**(0.25)
+    return A0*(v2(x))**(0.25)
+
+def WKB_B(x):
+    """WKB for case B"""
+    A0 = f_hat*(v2(x2/2 + x1/2))**(0.25)
+    return A0/(v2(x))**(0.25)
+
+def WKB_C(x):
+    """WKB for case C"""
+    A0 = f_hat*(v2(x2/2 + x1/2))**(0.75)
+    return A0/(v2(x))**(0.75)
+
 
 om_n = np.sqrt(g*h0)*(ninit+0.5)*np.pi / L # Mode propre
 nTn = 30 # Nombre de périodes de transit
@@ -93,7 +131,7 @@ Nx = np.array([nx]) #, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n,
 #nsimul = len(states)
 #nsimul = len(nsteps)
 #nsimul = len(oms)
-evolve = True # évolution continue de la vague
+evolve = False # évolution continue de la vague
 heat = False # Heatmap de l'amplitude, x et t
 mode = False # Mode propres
 conv = False
@@ -124,35 +162,6 @@ for i in range(1):
     t = f[:, 0]
     f = f[:, 1:]
     e = e[:, 1:]
-
-    if tsunami:
-        max_i = f.argmax(axis=1)
-        maxes=[]
-        x_maxes=[]
-        for j in range(len(max_i)):
-            i_max = max_i[j]
-
-            if i_max <= 0:
-                cols = [0, 1, 2]
-            elif i_max >= f.shape[1] - 1:
-                cols = [f.shape[1]-3, f.shape[1]-2, f.shape[1]-1]
-            else:
-                cols = [i_max - 1, i_max, i_max + 1]
-
-            maxes.append(f[j, cols])
-            x_maxes.append(x[cols])
-
-        X = np.array(x_maxes)
-        Y = np.array(maxes)
-        f_max = []
-        x_max = []
-
-        for k in range(len(X)):
-            # Polynôme quadratique
-            a, b, c = np.polyfit(X[k], Y[k], deg=2)
-            crete = -b/(2*a) # Valeur de x du maximum
-            x_max.append(crete)
-            f_max.append(a*crete**2 + b*crete + c)
 
 
     if conv:
@@ -189,20 +198,68 @@ for i in range(1):
             plt.grid(alpha=0.8)
             plt.show()
 
+    if tsunami:
+        max_i = f.argmax(axis=1)
+        maxes = []
+        x_maxes = []
+
+        num_cols = f.shape[1]
+
+        for j, i_max in enumerate(max_i):
+            if i_max <= 0:
+                cols = [0, 1, 2]
+            elif i_max >= num_cols - 1:
+                cols = [num_cols - 3, num_cols - 2, num_cols - 1]
+            else:
+                cols = [i_max - 1, i_max, i_max + 1]
+
+            maxes.append(f[j, cols])
+            x_maxes.append(x[cols])
+
+        X = np.array(x_maxes)
+        Y = np.array(maxes)
+        f_max = []
+        x_max = []
+        for k in range(len(X)):
+            a, b, c = np.polyfit(X[k], Y[k], deg=2)
+            crete = -b / (2 * a)
+            x_max.append(crete)
+            f_max.append(a * crete ** 2 + b * crete + c)
+
+        x_max = np.array(x_max)
+        f_max = np.array(f_max)
+
+
+
+        k=1
+        v_num = (x_max[2*k:]-x_max[:2*k])/(t[2*k:]-t[:2*k])
+
+        # Plotting
+        plt.figure()
+        plt.plot(x_max/1000, f_max, 'b', label=r'Solution numérique')
+        plt.plot(x_max/1000, WKB_B(x_max), 'g--', label=r'Solution WKB')
+        plt.xlabel(r"$x$ [km]")
+        plt.ylabel(r"$f_{\mathrm{max}}(x,t)$ [m]")
+        plt.grid(alpha=0.8)
+        plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
+        plt.legend()
+        plt.show()
+
+
 
 
     if heat :
         # Plot heatmap
         plt.figure()
-        extent = [x.min(), x.max(), t.min(), t.max()]
+        extent = [x.min()/1000, x.max()/1000, t.min()/3600, t.max()/3600]
         max_abs = np.abs(f).max()
 
         plt.imshow(f, aspect='auto', extent=extent, origin='lower', cmap='seismic',
                    vmin=-max_abs, vmax=max_abs)
-        plt.colorbar(label=r'Amplitude $f(x, t)$')
-        plt.xlabel(r"$x$ [m]")
-        plt.ylabel(r"$t$ [s]")
-        plt.title(rf"$\beta_{{CFL}}={CFL[i]}$, $n_x={int(nx)}$")
+        plt.colorbar(label=r'Amplitude $f(x, t)$ [m]')
+        plt.xlabel(r"$x$ [km]")
+        plt.ylabel(r"$t$ [h]")
+        plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
         plt.show()
 
 if conv:

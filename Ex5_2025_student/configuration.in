@@ -8,19 +8,19 @@ f_hat = 1.0
 x1=50e3
 x2=350e3
 
-tfin=12000
+tfin=9000
 equation_type=B // A, B, C
 nx=5000
 n_init=3 // numéro du mode propre à initialiser
-initialization=mode // mode, autre
-initial_state=static // right, left, static
+initialization=autre // mode, autre
+initial_state=right // right, left, static
 
 CFL=1
 nsteps=75
 impose_nsteps = false
 
-output=test.out
-n_stride=100
+output=test.ou
+n_stride=25
 ecrire_f=1
 
 hL = 8000.0
