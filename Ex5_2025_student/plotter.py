@@ -232,7 +232,8 @@ for i in range(1):
 
 
         k=1
-        v_num = (x_max[2*k:]-x_max[:2*k])/(t[2*k:]-t[:2*k])
+        u_num = (x_max[2*k:] - x_max[:-2*k]) / (t[2*k:] - t[:-2*k])
+        x_pos = x_max[k:-k]
 
         # Plotting
         plt.figure()
@@ -244,6 +245,17 @@ for i in range(1):
         plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
         plt.legend()
         plt.show()
+
+        plt.figure()
+        plt.plot(x_pos/1000, u_num, 'r', label=r'Solution numérique')
+        plt.plot(x_max/1000, np.sqrt(v2(x_max)), 'g--', label=r'Solution analytique')
+        plt.xlabel(r"$x$ [km]")
+        plt.ylabel(r"$u(x,t)$ [m/s]")
+        plt.grid(alpha=0.8)
+        plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
+        plt.legend()
+        plt.show()
+
 
 
 
