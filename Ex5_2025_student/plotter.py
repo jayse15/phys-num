@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import subprocess
 import matplotlib.pyplot as plt
