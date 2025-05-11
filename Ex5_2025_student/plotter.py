@@ -8,7 +8,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 300,                 # DPI for displaying figures
+    'figure.dpi': 150,                 # DPI for displaying figures
     'font.size': 16,
     'lines.linewidth':2,
     'lines.markersize':7,
@@ -228,11 +228,10 @@ for i in range(1):
         x_max = np.array(x_max)
         f_max = np.array(f_max)
 
-
-
         k=1
         u_num = (x_max[2*k:] - x_max[:-2*k]) / (t[2*k:] - t[:-2*k])
         x_pos = x_max[k:-k]
+
 
         # Plotting
         plt.figure()
@@ -254,7 +253,6 @@ for i in range(1):
         plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
         plt.legend()
         plt.show()
-
 
 
 
