@@ -8,12 +8,12 @@ f_hat = 1.0
 x1=50e3
 x2=350e3
 
-tfin=9000
+tfin=6000
 equation_type=B // A, B, C
 nx=5000
 n_init=3 // numéro du mode propre à initialiser
-initialization=mode // mode, autre
-initial_state=right // right, left, static
+initialization=autre // mode, autre
+initial_state=static // right, left, static
 
 CFL=1.0
 nsteps=75
@@ -26,7 +26,7 @@ ecrire_f=1
 hL = 8000.0
 hR = 20.0
 h00= 4.0
-xa= 450e3
+xa= 900e3
 xb= 950e3
 L= 1000e3 // right boundary of the domain
 om=0.1  // angular frequency of excitation

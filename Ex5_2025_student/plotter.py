@@ -75,6 +75,7 @@ xa = parameters['xa']
 xb = parameters['xb']
 x1 = parameters['x1']
 x2 = parameters['x2']
+eq = parameters['equation_type']
 
 g=9.81
 dx = L/nx
@@ -119,7 +120,7 @@ def WKB_C(x):
 
 
 om_n = np.sqrt(g*h0)*(ninit+0.5)*np.pi / L # Mode propre
-nTn = 30 # Nombre de périodes de transit
+nTn = 1 # Nombre de périodes de transit
 tfin = nTn*2*np.pi/om_n # Periode
 oms = [om_n - 3 + i * 6 / (100 - 1) for i in range(100)] # Omegas pour résonnance
 
@@ -128,9 +129,9 @@ n = 20
 nsteps=np.array([n])#, 2*n, 3*n, 4*n, 8*n, 12*n, 16*n, 25*n, 32*n, 40*n, 50*n, 64*n])
 Nx = np.array([nx])#, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n, 50*nx, 64*nx])
 #nsimul = len(states)
-#nsimul = len(nsteps)
+nsimul = len(nsteps)
 #nsimul = len(oms)
-evolve = False # évolution continue de la vague
+evolve = True # évolution continue de la vague
 heat = False # Heatmap de l'amplitude, x et t
 mode = False # Mode propres
 conv = False
@@ -146,10 +147,10 @@ if impose_n :
 E = []
 error=[]
 for i in range(1):
-    output_file = f"data/xa={450}km.out"
+    output_file = f"data/tsunami.out"
     outputs.append(output_file)
     cmd = f"{repertoire}{executable} {input_filename} output={output_file} initial_state={states[0]}"
-    if mode : cmd+=f" tfin={tfin} nsteps={nsteps[0]} nx={Nx[0]}"
+    if mode : cmd+=f" tfin={tfin} nsteps={nsteps[i]} nx={Nx[i]}"
     if E_ : cmd+=f" om={oms[i]}"
     print(cmd)
     subprocess.run(cmd, shell=True)
@@ -235,15 +236,20 @@ for i in range(1):
 
 
         # Plotting
+        wkb=0
+        if eq=='A': wkb=WKB_A(x_max)
+        elif eq=='B': wkb=WKB_B(x_max)
+        else : wkb=WKB_C(x_max)
         plt.figure()
         plt.plot(x_max/1000, f_max, 'b', label=r'Solution numérique')
-        plt.plot(x_max/1000, WKB_B(x_max), 'g--', label=r'Solution WKB')
+        plt.plot(x_max/1000, wkb, 'g--', label=r'Solution WKB')
         plt.xlabel(r"$x$ [km]")
         plt.ylabel(r"$f_{\mathrm{max}}(x,t)$ [m]")
         plt.grid(alpha=0.8)
         plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
         plt.legend()
         plt.show()
+
 
         plt.figure()
         plt.plot(x_pos/1000, u_num, 'r', label=r'Solution numérique')
@@ -261,14 +267,14 @@ for i in range(1):
     if heat :
         # Plot heatmap
         plt.figure()
-        extent = [x.min(), x.max(), t.min(), t.max()]
+        extent = [x.min()/1000, x.max()/1000, t.min()/3600, t.max()/3600]
         max_abs = np.abs(f).max()
 
         plt.imshow(f, aspect='auto', extent=extent, origin='lower', cmap='seismic',
                    vmin=-max_abs, vmax=max_abs)
         plt.colorbar(label=r'$f(x, t)$ [m]')
-        plt.xlabel(r"$x$ [m]")
-        plt.ylabel(r"$t$ [s]")
+        plt.xlabel(r"$x$ [km]")
+        plt.ylabel(r"$t$ [h]")
         plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
         plt.show()
 
@@ -279,7 +285,7 @@ if conv:
 
     plt.figure()
     plt.loglog(dt, error, 'rx')
-    plt.loglog(dt, y_fit, 'k--', label=rf"$y = {np.exp(intercept):.3f}\Delta t^{{({slope:.3f}\pm{std_err:.3f})}}$")
+    plt.loglog(dt, y_fit, 'k--', label=rf"$y = {np.exp(intercept):.4f}\Delta t^{{({slope:.4f}\pm{std_err:.4f})}}$")
     plt.xlabel(r"$\Delta t$ [s]")
     plt.ylabel(r"Erreur [m$^2$]")
     plt.legend()
