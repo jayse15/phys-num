@@ -118,25 +118,24 @@ def WKB_C(x):
     A0 = f_hat*(v2(x2/2 + x1/2))**(0.75)
     return A0/(v2(x))**(0.75)
 
-
 om_n = np.sqrt(g*h0)*(ninit+0.5)*np.pi / L # Mode propre
-nTn = 1 # Nombre de périodes de transit
+nTn = 30 # Nombre de périodes de transit
 tfin = nTn*2*np.pi/om_n # Periode
-oms = [om_n - 3 + i * 6 / (100 - 1) for i in range(100)] # Omegas pour résonnance
+oms = [om_n - 0.5 + i / (100 - 1) for i in range(100)] # Omegas pour résonnance
 
 states = ['right']
 n = 20
 nsteps=np.array([n])#, 2*n, 3*n, 4*n, 8*n, 12*n, 16*n, 25*n, 32*n, 40*n, 50*n, 64*n])
 Nx = np.array([nx])#, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n, 50*nx, 64*nx])
 #nsimul = len(states)
-nsimul = len(nsteps)
-#nsimul = len(oms)
-evolve = True # évolution continue de la vague
+#nsimul = len(nsteps)
+nsimul = len(oms)
+evolve = False # évolution continue de la vague
 heat = False # Heatmap de l'amplitude, x et t
 mode = False # Mode propres
 conv = False
-E_ = False
-tsunami = True
+E_ = True
+tsunami = False
 
 if impose_n :
     dt=tfin/nsteps
@@ -146,12 +145,12 @@ if impose_n :
 
 E = []
 error=[]
-for i in range(1):
-    output_file = f"data/tsunami.out"
+for i in range(nsimul):
+    output_file = f"data/om={oms[i]}.out"
     outputs.append(output_file)
     cmd = f"{repertoire}{executable} {input_filename} output={output_file} initial_state={states[0]}"
     if mode : cmd+=f" tfin={tfin} nsteps={nsteps[i]} nx={Nx[i]}"
-    if E_ : cmd+=f" om={oms[i]}"
+    if E_ : cmd+=f" om={oms[i]} tfin={tfin}"
     print(cmd)
     subprocess.run(cmd, shell=True)
     print('Done.')
@@ -300,6 +299,6 @@ if E_:
     plt.xlabel(r"$\omega$ [rad/s]")
     plt.ylabel(r"$\hat{E}$ [m$^3$]")
     plt.grid(alpha=0.8)
-    plt.legend()
+    plt.legend(loc='upper left')
     plt.title(rf"$\beta_{{CFL}}={CFL}$, $n=3$, $n_x={int(nx)}$, $t_{{\mathrm{{fin}}}}={int(nTn)}T_n$")
     plt.show()
