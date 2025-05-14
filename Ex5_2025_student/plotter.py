@@ -131,11 +131,11 @@ Nx = np.array([nx]) #, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n,
 #nsimul = len(nsteps)
 #nsimul = len(oms)
 evolve = False # évolution continue de la vague
-heat = False # Heatmap de l'amplitude, x et t
+heat = True # Heatmap de l'amplitude, x et t
 mode = False # Mode propres
 conv = False
 E_ = False
-tsunami = True
+tsunami = False
 
 if impose_n :
     dt=tfin/nsteps
