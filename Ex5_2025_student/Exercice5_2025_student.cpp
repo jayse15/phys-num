@@ -245,15 +245,17 @@ int main(int argc, char* argv[])
     {
       fnext[i] = 0.0;
       if (equation_type == "A"){
-        fnext[i] = 2.0*(1-beta2[i])*(fnow[i]-fpast[i]) + beta2[i]*(fnow[i+1]+fnow[i-1]);
+        fnext[i] = 2.0*(1-beta2[i])*fnow[i] - fpast[i] + beta2[i]*(fnow[i+1]+fnow[i-1]);
       }
       else if (equation_type == "B"){
         fnext[i] = (beta2[i+1]-beta2[i-1])/4.0 * (fnow[i+1]-fnow[i-1]) +
                    2.0*(1-beta2[i])*fnow[i] - fpast[i] + beta2[i]*(fnow[i+1]+fnow[i-1]);
       }
       else if (equation_type == "C"){
-        fnext[i] = fnow[i]*(2.0*(1-2.0*beta2[i]) + beta2[i+1] + beta2[i-1]) +
-                    (fnow[i+1] - fnow[i-1])*(beta2[i] + 0.5*(beta2[i+1]-beta2[i-1])) - fpast[i];
+        //fnext[i] = fnow[i]*(2.0*(1.0-2.0*beta2[i]) + beta2[i+1] + beta2[i-1]) +
+                    //(fnow[i+1] - fnow[i-1])*(beta2[i] + 0.5*(beta2[i+1]-beta2[i-1])) - fpast[i];
+        fnext[i] = 2.0*(1-beta2[i])*fnow[i] - fpast[i] + beta2[i+1]*fnow[i+1] + beta2[i-1]*fnow[i-1];
+
       }
     }
 

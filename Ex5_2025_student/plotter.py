@@ -8,7 +8,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 150,                 # DPI for displaying figures
+    'figure.dpi': 275,                 # DPI for displaying figures
     'font.size': 16,
     'lines.linewidth':2,
     'lines.markersize':7,
@@ -75,6 +75,7 @@ xa = parameters['xa']
 xb = parameters['xb']
 x1 = parameters['x1']
 x2 = parameters['x2']
+eq = parameters['equation_type']
 
 g=9.81
 dx = L/nx
@@ -117,24 +118,23 @@ def WKB_C(x):
     A0 = f_hat*(v2(x2/2 + x1/2))**(0.75)
     return A0/(v2(x))**(0.75)
 
-
 om_n = np.sqrt(g*h0)*(ninit+0.5)*np.pi / L # Mode propre
 nTn = 30 # Nombre de périodes de transit
 tfin = nTn*2*np.pi/om_n # Periode
-oms = [om_n - 3 + i * 6 / (100 - 1) for i in range(100)] # Omegas pour résonnance
+oms = [om_n - 0.5 + i / (100 - 1) for i in range(100)] # Omegas pour résonnance
 
 states = ['right']
-n = 30
-nsteps=np.array([n]) #, 2*n, 3*n, 4*n, 8*n, 12*n, 16*n, 25*n, 32*n, 40*n, 50*n, 64*n])
-Nx = np.array([nx]) #, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n, 50*nx, 64*nx])
+n = 20
+nsteps=np.array([n])#, 2*n, 3*n, 4*n, 8*n, 12*n, 16*n, 25*n, 32*n, 40*n, 50*n, 64*n])
+Nx = np.array([nx])#, 2*nx, 3*nx, 4*nx, 8*nx, 12*nx, 16*nx, 25*nx, 32*nx, 40*n, 50*nx, 64*nx])
 #nsimul = len(states)
 #nsimul = len(nsteps)
-#nsimul = len(oms)
+nsimul = len(oms)
 evolve = False # évolution continue de la vague
 heat = True # Heatmap de l'amplitude, x et t
 mode = False # Mode propres
 conv = False
-E_ = False
+E_ = True
 tsunami = False
 
 if impose_n :
@@ -145,11 +145,12 @@ if impose_n :
 
 E = []
 error=[]
-for i in range(1):
-    output_file = f"data/xa={450}km.out"
+for i in range(nsimul):
+    output_file = f"data/om={oms[i]}.out"
     outputs.append(output_file)
     cmd = f"{repertoire}{executable} {input_filename} output={output_file} initial_state={states[0]}"
-    if mode : cmd+=f" tfin={tfin} nsteps={nsteps[0]} nx={Nx[0]} om={oms[i]}"
+    if mode : cmd+=f" tfin={tfin} nsteps={nsteps[i]} nx={Nx[i]}"
+    if E_ : cmd+=f" om={oms[i]} tfin={tfin}"
     print(cmd)
     subprocess.run(cmd, shell=True)
     print('Done.')
@@ -191,7 +192,7 @@ for i in range(1):
             plt.plot(x, f[-1], 'b+-', label=r'$f_{num}(x, t=T_n)$')
             plt.plot(x_plot, f_a(x_plot), 'r', label=r'$f_{ana}(x, t=T_n)$')
             plt.xlabel(r'$x$ [m]')
-            plt.ylabel(r'$y$ [u.a.]')
+            plt.ylabel(r'$y$ [m]')
             plt.title(rf"$\beta_{{CFL}}={CFL[i]:.3f}$, $n_x={int(Nx[i])}$, $n={int(ninit)}$")
             plt.legend(loc='upper right')
             plt.grid(alpha=0.8)
@@ -234,15 +235,20 @@ for i in range(1):
 
 
         # Plotting
+        wkb=0
+        if eq=='A': wkb=WKB_A(x_max)
+        elif eq=='B': wkb=WKB_B(x_max)
+        else : wkb=WKB_C(x_max)
         plt.figure()
         plt.plot(x_max/1000, f_max, 'b', label=r'Solution numérique')
-        plt.plot(x_max/1000, WKB_B(x_max), 'g--', label=r'Solution WKB')
+        plt.plot(x_max/1000, wkb, 'g--', label=r'Solution WKB')
         plt.xlabel(r"$x$ [km]")
         plt.ylabel(r"$f_{\mathrm{max}}(x,t)$ [m]")
         plt.grid(alpha=0.8)
         plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
         plt.legend()
         plt.show()
+
 
         plt.figure()
         plt.plot(x_pos/1000, u_num, 'r', label=r'Solution numérique')
@@ -265,7 +271,7 @@ for i in range(1):
 
         plt.imshow(f, aspect='auto', extent=extent, origin='lower', cmap='seismic',
                    vmin=-max_abs, vmax=max_abs)
-        plt.colorbar(label=r'Amplitude $f(x, t)$ [m]')
+        plt.colorbar(label=r'$f(x, t)$ [m]')
         plt.xlabel(r"$x$ [km]")
         plt.ylabel(r"$t$ [h]")
         plt.title(rf"$\beta_{{CFL}}={CFL}$, $n_x={int(nx)}$")
@@ -278,9 +284,9 @@ if conv:
 
     plt.figure()
     plt.loglog(dt, error, 'rx')
-    plt.loglog(dt, y_fit, 'k--', label=rf"$y = {np.exp(intercept):.3f}\Delta t^{{({slope:.3f}\pm{std_err:.3f})}}$")
+    plt.loglog(dt, y_fit, 'k--', label=rf"$y = {np.exp(intercept):.4f}\Delta t^{{({slope:.4f}\pm{std_err:.4f})}}$")
     plt.xlabel(r"$\Delta t$ [s]")
-    plt.ylabel(r"Erreur")
+    plt.ylabel(r"Erreur [m$^2$]")
     plt.legend()
     plt.title(rf"$\beta_{{CFL}}={CFL[0]:.3f}$, $n=3$")
     plt.show()
@@ -289,9 +295,10 @@ if E_:
     E=np.array(E)
     plt.figure()
     plt.plot(oms, E, 'b+-', lw=1.5)
-    plt.vlines(om_n, ymin=E.min(), ymax=E.max(), colors='r', lw=1, label=r'$\omega_n$')
+    plt.vlines(om_n, ymin=E.min()*0.8, ymax=E.max()*1.1, colors='r', lw=1, label=r'$\omega_n$')
     plt.xlabel(r"$\omega$ [rad/s]")
-    plt.ylabel(r"$\hat{E}$ [u.a.]")
-    plt.legend()
+    plt.ylabel(r"$\hat{E}$ [m$^3$]")
+    plt.grid(alpha=0.8)
+    plt.legend(loc='upper left')
     plt.title(rf"$\beta_{{CFL}}={CFL}$, $n=3$, $n_x={int(nx)}$, $t_{{\mathrm{{fin}}}}={int(nTn)}T_n$")
     plt.show()
