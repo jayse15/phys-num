@@ -38,9 +38,22 @@ void triangular_solve(vector<T> const& diag,  vector<T> const& lower, vector<T> 
     }
 }
 
-// TODO Potentiel V(x) :
-double V()
+// Potentiel V(x) :
+double V(double om, double x_a, double x_b, double x_L, double x_R, double V0, double x)
 {
+    const double PI = 3.1415926535897932384626433832795028841971e0;
+
+    if (x>x_L){
+      if (x<x_a){
+        return 0.5*pow(om, 2)*pow((x-x_a)/(x_L-x_a), 2);
+      }
+      if (x<x_b){
+        return V0*pow(sin(PI*(x-x_a)/(x_b-x_a)), 2);
+      }
+      if (x<x_R){
+        return 0.5*pow(om, 2)*pow((x-x_b)/(x_R-x_b), 2);
+      }
+    }
     return 0;
 }
 
@@ -157,15 +170,15 @@ main(int argc, char** argv)
     // initialization time and position to check Probability
     double t = 0;
     unsigned int Nx0 = floor((0 - xL)/(xR-xL)*Npoints); //chosen xR*0.5 since top of potential is at half x domain
-  
+
     // TODO initialize psi
     for (int i(0); i < Npoints; ++i)
     	psi[i] = 1;
-   
+
     // Modifications des valeurs aux bords :
     psi[0] = complex<double>(0., 0.);
     psi[Npoints - 1] = complex<double>(0., 0.);
-    
+
     // Normalisation :
     psi = normalize(psi, dx);
 
@@ -230,10 +243,10 @@ main(int argc, char** argv)
     // TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
     //       en accord avec la façon dont vous les aurez programmés plus haut
     fichier_observables << t << " " << prob() << " " << prob()
-                << " " << E() << " " << xmoy () << " "  
-                << x2moy() << " " << pmoy () << " " << p2moy() << endl; 
+                << " " << E() << " " << xmoy () << " "
+                << x2moy() << " " << pmoy () << " " << p2moy() << endl;
 
-    // Boucle temporelle :    
+    // Boucle temporelle :
     while (t < tfin) {
 
         // Multiplication psi_tmp = B * psi :
@@ -259,8 +272,8 @@ main(int argc, char** argv)
 	// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
 	//       en accord avec la façon dont vous les aurez programmés plus haut
         fichier_observables << t << " " << prob() << " " << prob()
-                    << " " << E() << " " << xmoy () << " "  
-                    << x2moy() << " " << pmoy () << " " << p2moy() << endl; 
+                    << " " << E() << " " << xmoy () << " "
+                    << x2moy() << " " << pmoy () << " " << p2moy() << endl;
 
     } // Fin de la boucle temporelle
 
