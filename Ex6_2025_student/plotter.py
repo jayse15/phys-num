@@ -164,7 +164,7 @@ for i in range(nsimul):
         line3, = ax.plot(x, imag[0], 'b', label=r'$Im(\psi(x, t))$')
         ax.legend()
         ax.set_ylim(real.min() - 0.1, abs.max() + 0.1)
-        ax.set_xlabel(r'$x$ [m]')
+        ax.set_xlabel(r'$x$')
         ax.set_ylabel(r'$\psi(x, t)$')
 
         # Update loop
@@ -188,7 +188,7 @@ for i in range(nsimul):
         plt.imshow(abs, aspect='auto', extent=extent, origin='lower', cmap='seismic',
                    vmin=-max_abs, vmax=max_abs)
         plt.colorbar(label=r'$|\psi(x, t)|$')
-        plt.xlabel(r"$x$ [m]")
+        plt.xlabel(r"$x$")
         plt.ylabel(r"$t$ [s]")
         if tunnel2:
             signs = ['>', r'\approx', '<']
@@ -203,7 +203,7 @@ for i in range(nsimul):
             plt.imshow(real, aspect='auto', extent=extent, origin='lower', cmap='seismic',
                     vmin=-max_abs, vmax=max_abs)
             plt.colorbar(label=r'$Re(\psi(x, t))$')
-            plt.xlabel(r"$x$ [m]")
+            plt.xlabel(r"$x$")
             plt.ylabel(r"$t$ [s]")
             plt.show()
 
@@ -213,7 +213,7 @@ for i in range(nsimul):
         plt.plot(t, x_moy, 'r', label=r'Quantique')
         plt.plot(t, x_class(t), 'g--', label=r'Classique')
         plt.xlabel(r"$t$ [s]")
-        plt.ylabel(r"$\langle x \rangle$ [m]")
+        plt.ylabel(r"$\langle x \rangle$")
         plt.grid()
         plt.legend(loc='lower left')
         plt.show()
@@ -222,7 +222,7 @@ for i in range(nsimul):
         plt.plot(t, p_moy, 'r', label=r'Quantique')
         plt.plot(t, p_class(t), 'g--', label=r'Classique')
         plt.xlabel(r"$t$ [s]")
-        plt.ylabel(r"$\langle p \rangle$ [m/s]")
+        plt.ylabel(r"$\langle p \rangle$")
         plt.grid()
         plt.legend(loc='lower left')
         plt.show()
@@ -237,7 +237,7 @@ for i in range(nsimul):
         plt.figure()
         plt.plot(t, E, 'orange')
         plt.xlabel(r"$t$ [s]")
-        plt.ylabel(r"$\langle E \rangle$ [J]")
+        plt.ylabel(r"$\langle E \rangle$")
         plt.grid()
         plt.show()
 
@@ -245,7 +245,7 @@ for i in range(nsimul):
         plt.plot(t, delta_P*delta_x, 'g')
         plt.hlines(0.5, 0, tfin, colors='r', ls='--', label=r'$\frac{\hbar}{2}$')
         plt.xlabel(r"$t$ [s]")
-        plt.ylabel(r"$\Delta x \cdot \Delta p$ [kg$\cdot$m$^2\cdot$s$^{-1}$]")
+        plt.ylabel(r"$\Delta x \cdot \Delta p$")
         plt.grid()
         plt.legend()
         plt.show()
@@ -272,11 +272,11 @@ if conv:
         plt.xlabel(r"$\Delta t^2$ [s]")
         value = (tfin/conv_values)
     else :
-        plt.xlabel(r"$h_x^2$ [m]")
+        plt.xlabel(r"$h_x^2$")
         value = (L/conv_values)
 
     plt.plot(value**2, conv_list, 'k+-')
-    plt.ylabel(r"$\langle x \rangle (t_{\mathrm{fin}})$ [m]")
+    plt.ylabel(r"$\langle x \rangle (t_{\mathrm{fin}})$")
     plt.grid()
     plt.show()
 
