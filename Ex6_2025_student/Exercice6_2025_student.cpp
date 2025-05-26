@@ -43,15 +43,15 @@ double V(double om, double x_a, double x_b, double x_L, double x_R, double V0, d
 {
     const double PI = 3.1415926535897932384626433832795028841971e0;
 
-    if (x>x_L){
+    if (x>=x_L){
       if (x<x_a){
-        return 0.5*pow(om, 2)*pow((x-x_a)/(x_L-x_a), 2);
+        return 0.5*pow(om, 2)*pow((x-x_a)/(1.0-x_a/x_L), 2);
       }
       if (x<x_b){
         return V0*pow(sin(PI*(x-x_a)/(x_b-x_a)), 2);
       }
-      if (x<x_R){
-        return 0.5*pow(om, 2)*pow((x-x_b)/(x_R-x_b), 2);
+      if (x<=x_R){
+        return 0.5*pow(om, 2)*pow((x-x_b)/(1.0-x_b/x_R), 2);
       }
     }
     return 0;
@@ -66,40 +66,75 @@ double V(double om, double x_a, double x_b, double x_L, double x_R, double V0, d
 //  - p2moy:calcule sa quantite de mouvement au carre moyenne.
 
 
-// TODO: calculer la probabilite de trouver la particule dans un intervalle [x_i, x_j]
-double prob()
+// Calcule la probabilite de trouver la particule dans un intervalle [x_i, x_j]
+double prob(int x_i, int x_j, vec_cmplx const& psi, double hx)
 {
-    return 0;
+    double sum = 0;
+    for (int x=x_i; x<x_j; x++){
+      sum += norm(psi[x]) + norm(psi[x+1]);
+    }
+    return 0.5*hx*sum;
 }
 
-// TODO calculer l'energie
-double E(vec_cmplx const& dH, vec_cmplx const& aH, vec_cmplx const& cH, vec_cmplx const& psi){
+// Calcule l'energie
+double E(vec_cmplx const& dH, vec_cmplx const& aH, vec_cmplx const& cH, vec_cmplx const& psi, double hx){
+    complex<double> sum = 0;
+    int N = psi.size();
+    for (int i = 1; i < N-1; i++) {
+        sum += conj(psi[i]) * dH[i] * psi[i];
+        sum += std::conj(psi[i]) * aH[i - 1] * psi[i - 1];
+        sum += std::conj(psi[i]) * cH[i] * psi[i + 1];
+    }
 
-    return 0;
+    return hx*sum.real(); // No 0.5 factor because psi is 0 at edges
 }
 
-// TODO calculer xmoyenne
-double xmoy()
+// Calcule x moyen
+double xmoy(vector<double> x, vec_cmplx const& psi, double hx)
 {
-    return 0;
+    complex<double> sum = 0;
+    for (int i = 1; i < psi.size()-1; i++) {
+        sum += conj(psi[i]) * x[i] * psi[i];
+      }
+    return hx*sum.real();
 }
 
-// TODO calculer x.^2 moyenne
-double x2moy()
+// Calculer x^2 moyen
+double x2moy(vector<double> x, vec_cmplx const& psi, double hx)
 {
-    return 0;
+    complex<double> sum = 0;
+    for (int i = 1; i < psi.size()-1; i++) {
+        sum += conj(psi[i]) * x[i]*x[i] * psi[i];
+      }
+    return hx*sum.real();
 }
 
-// TODO calculer p moyenne
-double pmoy()
+// Calcule p moyen
+double pmoy(vec_cmplx const& psi, double hx)
 {
-    return 0;
+    int N = psi.size();
+    std::complex<double> sum = 0.0;
+
+    for (int i = 1; i < N - 1; ++i) {
+        std::complex<double> dpsi  = (psi[i + 1] - psi[i - 1]) / (2.0 * hx);
+        sum += std::conj(psi[i]) * (-1i * dpsi);
+    }
+
+    return hx * sum.real();
 }
 
-// TODO calculer p.^2 moyenne
-double p2moy()
+// Calcule p^2 moyen
+double p2moy(vec_cmplx const& psi, double hx)
 {
-    return 0;
+    int N = psi.size();
+    std::complex<double> sum = 0.0;
+
+    for (int i = 1; i < N - 1; ++i) {
+        std::complex<double> dpsi2  = (psi[i + 1] - 2.0*psi[i] + psi[i - 1]) / (hx * hx);
+        sum += std::conj(psi[i]) * (-dpsi2);
+    }
+
+    return hx * sum.real();
 }
 
 // Calcule la normalization
@@ -151,18 +186,19 @@ main(int argc, char** argv)
     double V0 = configFile.get<double>("V0");
     double om0 = configFile.get<double>("om0");
     double n  = configFile.get<int>("n"); // Read mode number as integer, convert to double
-
+    double L = (xR - xL);
     double x0 = configFile.get<double>("x0");
-    double sigma0 = configFile.get<double>("sigma_norm") * (xR - xL);
+    double sigma0 = configFile.get<double>("sigma_norm") * L;
 
     int Nsteps = configFile.get<int>("Nsteps");
     int Nintervals = configFile.get<int>("Nintervals");
 
     // Initialise le paquet d'onde, equation (4.116) du cours
-    double k0 = n*2*PI/(xR-xL);
+
+    double k0 = n*2*PI/L;
 
     int Npoints = Nintervals + 1;
-    double dx = (xR - xL) / Nintervals;
+    double dx = L / Nintervals;
     double dt = tfin / Nsteps;
 
     const auto simulationStart = std::chrono::steady_clock::now();
@@ -177,11 +213,11 @@ main(int argc, char** argv)
 
     // initialization time and position to check Probability
     double t = 0;
-    unsigned int Nx0 = floor((0 - xL)/(xR-xL)*Npoints); //chosen xR*0.5 since top of potential is at half x domain
+    unsigned int Nx0 = floor((0 - xL)/(xR-xL)*Npoints);
 
     // initialize psi
     for (int i(0); i < Npoints; ++i)
-    	psi[i] = exp(complex_i*k0*x[i]) * exp(-pow(x[i]-x0, 2) / (2*pow(sigma0, 2)));
+    	psi[i] = exp(complex_i*k0*x[i]) * exp(-pow((x[i]-x0), 2)/(2*sigma0*sigma0));
 
     // Modifications des valeurs aux bords :
     psi[0] = complex<double>(0., 0.);
@@ -253,11 +289,9 @@ main(int argc, char** argv)
     fichier_psi << endl;
 
     // Ecriture des observables :
-    // TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
-    //       en accord avec la façon dont vous les aurez programmés plus haut
-    // fichier_observables << t << " " << prob() << " " << prob()
-    //             << " " << E() << " " << xmoy () << " "
-    //             << x2moy() << " " << pmoy () << " " << p2moy() << endl;
+    fichier_observables << t << " " << prob(0, Nx0, psi, dx) << " " << prob(Nx0, Nintervals, psi, dx)
+                << " " << E(dH, aH, cH, psi, dx) << " " << xmoy (x, psi, dx) << " "
+                << x2moy(x, psi, dx) << " " << pmoy (psi, dx) << " " << p2moy(psi, dx) << endl;
 
     // Boucle temporelle :
     while (t < tfin) {
@@ -275,18 +309,16 @@ main(int argc, char** argv)
         triangular_solve(dA, aA, cA, psi_tmp, psi);
         t += dt;
 
-        // t0 writing
+        // Writing
         for (int i(0); i < Npoints; ++i){
             fichier_psi << abs(psi[i])  << " " << real(psi[i]) << " "  << imag(psi[i]) << " ";
             }
         fichier_psi << endl;
 
         // Ecriture des observables :
-	// TODO: introduire les arguments des fonctions prob, E, xmoy, x2moy, pmoy et p2moy
-	//       en accord avec la façon dont vous les aurez programmés plus haut
-        // fichier_observables << t << " " << prob() << " " << prob()
-        //             << " " << E() << " " << xmoy () << " "
-        //             << x2moy() << " " << pmoy () << " " << p2moy() << endl;
+        fichier_observables << t << " " << prob(0, Nx0, psi, dx) << " " << prob(Nx0, Nintervals, psi, dx)
+                << " " << E(dH, aH, cH, psi, dx) << " " << xmoy (x, psi, dx) << " "
+                << x2moy(x, psi, dx) << " " << pmoy (psi, dx) << " " << p2moy(psi, dx) << endl;
 
     } // Fin de la boucle temporelle
 
