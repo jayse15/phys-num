@@ -70,8 +70,8 @@ double V(double om, double x_a, double x_b, double x_L, double x_R, double V0, d
 double prob(int x_i, int x_j, vec_cmplx const& psi, double hx)
 {
     double sum = 0;
-    for (int x=x_i; x<x_j; x++){
-      sum += norm(psi[x]) + norm(psi[x+1]);
+    for (int i=x_i; i<x_j; ++i){
+      sum += norm(psi[i]) + norm(psi[i+1]);
     }
     return 0.5*hx*sum;
 }
@@ -80,7 +80,7 @@ double prob(int x_i, int x_j, vec_cmplx const& psi, double hx)
 double E(vec_cmplx const& dH, vec_cmplx const& aH, vec_cmplx const& cH, vec_cmplx const& psi, double hx){
     complex<double> sum = 0;
     int N = psi.size();
-    for (int i = 1; i < N-1; i++) {
+    for (int i = 1; i < N-1; ++i) {
         sum += conj(psi[i]) * dH[i] * psi[i];
         sum += std::conj(psi[i]) * aH[i - 1] * psi[i - 1];
         sum += std::conj(psi[i]) * cH[i] * psi[i + 1];
@@ -93,7 +93,7 @@ double E(vec_cmplx const& dH, vec_cmplx const& aH, vec_cmplx const& cH, vec_cmpl
 double xmoy(vector<double> x, vec_cmplx const& psi, double hx)
 {
     complex<double> sum = 0;
-    for (int i = 1; i < psi.size()-1; i++) {
+    for (int i = 1; i < psi.size()-1; ++i) {
         sum += conj(psi[i]) * x[i] * psi[i];
       }
     return hx*sum.real();
@@ -103,7 +103,7 @@ double xmoy(vector<double> x, vec_cmplx const& psi, double hx)
 double x2moy(vector<double> x, vec_cmplx const& psi, double hx)
 {
     complex<double> sum = 0;
-    for (int i = 1; i < psi.size()-1; i++) {
+    for (int i = 1; i < psi.size()-1; ++i) {
         sum += conj(psi[i]) * x[i]*x[i] * psi[i];
       }
     return hx*sum.real();
@@ -142,10 +142,10 @@ vec_cmplx normalize(vec_cmplx const& psi, double const& dx)
 {
     vec_cmplx psi_norm(psi.size());
     double integral = 0.0;
-    for (int i=0; i<psi.size()-1; i++){
+    for (int i=0; i<psi.size()-1; ++i){
         integral+= dx*(norm(psi[i]) + norm(psi[i+1]))/2.0;
     }
-    for (int i=0; i<psi.size(); i++){
+    for (int i=0; i<psi.size(); ++i){
         psi_norm[i] = psi[i]/sqrt(integral);
     }
     return psi_norm;
@@ -252,7 +252,7 @@ main(int argc, char** argv)
         aH[i] = b;
         aA[i] = 1.0 + a*aH[i];
         aB[i] = 1.0 - a*aH[i];
-        cH[i] = aH[i];
+        cH[i] = b;
         cA[i] = aA[i];
         cB[i] = aB[i];
     }
