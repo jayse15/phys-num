@@ -8,9 +8,15 @@ f_hat = 0
 x1=50e3
 x2=350e3
 
+<<<<<<< HEAD
+tfin=9000
+equation_type=C // A, B, C
+nx=5000
+=======
 tfin=6000
 equation_type=B // A, B, C
 nx=100
+>>>>>>> f613f19522a2b3db41e9e1841e6e3a34bfae91f5
 n_init=3 // numéro du mode propre à initialiser
 initialization=autre // mode, autre
 initial_state=static // right, left, static
