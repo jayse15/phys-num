@@ -77,11 +77,11 @@ def p_class(t):
 
 evolve = False
 heat = False
-classic = False
+classic = True
 conv = False
 nx_fixe = False
-tunnel = True
-tunnel2 = True
+tunnel = False
+tunnel2 = False
 datas=[]
 outputs=[]
 conv_list = []
