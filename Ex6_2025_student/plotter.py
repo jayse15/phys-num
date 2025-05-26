@@ -8,7 +8,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 150,                 # DPI for displaying figures
+    'figure.dpi': 250,                 # DPI for displaying figures
     'font.size': 16,
     'lines.linewidth':2,
     'lines.markersize':7,
@@ -67,7 +67,7 @@ nx = parameters['Nintervals']
 nsteps = parameters['Nsteps']
 tfin = parameters['tfin']
 k = 2*parameters['n']*np.pi/L
-t_trans = 0.045
+t_trans = 0.03
 
 def x_class(t):
     return x0*np.cos(om0*t) + k/om0 * np.sin(om0*t)
@@ -90,7 +90,7 @@ nsimul=1
 V0 = []
 
 if conv:
-    conv_values = 2*np.array([80, 140, 160, 200, 280, 350, 600, 800, 1000])
+    conv_values = 3*np.array([80, 140, 160, 200, 280, 350, 600, 800, 1000])
     nsimul=len(conv_values)
 
 if tunnel:
@@ -247,7 +247,7 @@ for i in range(nsimul):
         plt.xlabel(r"$t$ [s]")
         plt.ylabel(r"$\Delta x \cdot \Delta p$")
         plt.grid()
-        plt.legend()
+        plt.legend(loc='upper right')
         plt.show()
 
     if tunnel2:
@@ -258,7 +258,8 @@ for i in range(nsimul):
         plt.ylabel(r"$P$")
         signs = ['>', r'\approx', '<']
         plt.title(rf'$\langle E \rangle {signs[i]} V_0 = {V0[i]}$')
-        plt.legend()
+        plt.legend(loc='upper right')
+        plt.grid()
         plt.show()
 
 
@@ -287,5 +288,5 @@ if (tunnel and not tunnel2):
     plt.xlabel(r"$\langle E \rangle / V_0$")
     plt.ylabel(r"$P_{\mathrm{trans}}$")
     plt.grid()
-    plt.title(r'$t_{\mathrm{trans}}=0.045$ s')
+    plt.title(r'$t_{\mathrm{trans}}=0.03$ s')
     plt.show()
