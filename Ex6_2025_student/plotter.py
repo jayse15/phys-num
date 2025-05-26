@@ -8,7 +8,7 @@ plt.rcParams.update({
     'text.usetex': True,               # Use LaTeX for all text rendering
     'font.family': 'serif',            # Set font family to serif
     'font.serif': ['Computer Modern'], # Use Computer Modern
-    'figure.dpi': 275,                 # DPI for displaying figures
+    'figure.dpi': 150,                 # DPI for displaying figures
     'font.size': 16,
     'lines.linewidth':2,
     'lines.markersize':7,
@@ -76,12 +76,12 @@ def p_class(t):
     return -om0*x0*np.sin(om0*t) + k*np.cos(om0*t)
 
 evolve = False
-heat = False
+heat = True
 classic = False
 conv = False
 nx_fixe = False
-tunnel = True
-tunnel2 = True
+tunnel = False
+tunnel2 = False
 datas=[]
 outputs=[]
 conv_list = []

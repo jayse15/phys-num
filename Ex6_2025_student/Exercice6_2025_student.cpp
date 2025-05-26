@@ -234,24 +234,24 @@ main(int argc, char** argv)
       cB(Nintervals); // matrice du membre de droite de l'equation (4.100)
 
     complex<double> a =
-      complex_i * dt / (2.*hbar); // Coefficient complexe a
+      complex_i * hbar * dt / (4.*m*dx*dx); // Coefficient complexe a
 
     complex<double> b =
-      -hbar * hbar / (dx*dx*2*m); // Coefficient complexe b
+      complex_i * dt / (2.*hbar); // Coefficient complexe b
 
     // Ces matrices sont stockées sous forme tridiagonale, d:diagonale, c et a: diagonales
     // supérieures et inférieures
     for (int i(0); i < Npoints; ++i) // Boucle sur les points de maillage
     {
-        dH[i] = -2.0*b + V(om0, xa, xb, xL, xR, V0, x[i]);
-        dA[i] = 1.0 + a*dH[i];
-        dB[i] = 1.0 - a*dH[i];
+        dH[i] = hbar*hbar/(m*(dx*dx)) + V(om0, xa, xb, xL, xR, V0, x[i]);
+        dA[i] = 1.0 + 2.*a + b*V(om0, xa, xb, xL, xR, V0, x[i]); 
+        dB[i] = 1.0 - 2.*a - b*V(om0, xa, xb, xL, xR, V0, x[i]);
     }
     for (int i(0); i < Nintervals; ++i) // Boucle sur les intervalles
     {
-        aH[i] = b;
-        aA[i] = 1.0 + a*aH[i];
-        aB[i] = 1.0 - a*aH[i];
+        aH[i] = -hbar*hbar/(2.*m*(dx*dx));
+        aA[i] = -a;
+        aB[i] = a;
         cH[i] = aH[i];
         cA[i] = aA[i];
         cB[i] = aB[i];
