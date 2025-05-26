@@ -114,13 +114,11 @@ double pmoy(vec_cmplx const& psi, double hx)
 {
     int N = psi.size();
     std::complex<double> sum = 0.0;
-
     for (int i = 1; i < N - 1; ++i) {
-        std::complex<double> dpsi  = (psi[i + 1] - psi[i - 1]) / (2.0 * hx);
-        sum += std::conj(psi[i]) * (-1i * dpsi);
+        sum += std::conj(psi[i]) * (psi[i + 1] - psi[i - 1]) ;
     }
 
-    return hx * sum.real();
+    return (-1i/2.0*sum).real();
 }
 
 // Calcule p^2 moyen
